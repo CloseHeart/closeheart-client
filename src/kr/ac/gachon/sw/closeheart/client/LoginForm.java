@@ -55,13 +55,11 @@ public class LoginForm extends JFrame {
 		
 		// Logo Image Panel
 		JPanel logoPanel = new JPanel();
-		logoPanel.setBorder(new EmptyBorder(25, 0, 25, 0)); 
 		contentPane.add(logoPanel, BorderLayout.NORTH);
 		JLabel lb_logoImage = new JLabel();
-		ImageIcon logo = new ImageIcon(new ImageIcon(LoginForm.class.getResource("resource/closeheart_logo.png")).getImage().getScaledInstance(150, 150, Image.SCALE_DEFAULT));
+		ImageIcon logo = new ImageIcon(new ImageIcon(LoginForm.class.getResource("resource/closeheart_logo_login.png")).getImage().getScaledInstance(200, 200, Image.SCALE_SMOOTH));
 		lb_logoImage.setIcon(logo);
-		lb_logoImage.setPreferredSize(new Dimension(150, 150));
-		lb_logoImage.setBounds(0, 0, 100, 100);
+		lb_logoImage.setPreferredSize(new Dimension(300, 200));
 		lb_logoImage.setHorizontalAlignment(JLabel.CENTER);
 		logoPanel.add(lb_logoImage);
 		
@@ -109,6 +107,7 @@ public class LoginForm extends JFrame {
 		gbc_pf_password.gridy = 2;
 		mainPanel.add(pf_password, gbc_pf_password);
 		
+		// Bottom (Button) Panel
 		JPanel bottomPanel = new JPanel();
 		contentPane.add(bottomPanel, BorderLayout.SOUTH);
 		GridBagLayout gbl_bottomPanel = new GridBagLayout();
