@@ -56,10 +56,10 @@ public class Util {
      * @author Minjae Seon
      * @param font Font
      */
-    public static String getStrFromProperties(String name) {
+    public static String getStrFromProperties(Class c, String name) {
         Properties properties = new Properties();
         try {
-            properties.load(new FileInputStream("res/string.properties"));
+            properties.load(c.getResourceAsStream("/res/string.properties"));
             return new String(properties.getProperty(name).getBytes(StandardCharsets.ISO_8859_1), StandardCharsets.UTF_8);
         } catch (Exception e) {
             e.printStackTrace();

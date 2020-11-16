@@ -20,7 +20,7 @@ public abstract class BaseForm extends JFrame {
         Util.changeUIFont(new Font("NanumGothic", Font.PLAIN, 13));
 
         // 타이틀 설정
-        setTitle(Util.getStrFromProperties("program_title"));
+        setTitle(Util.getStrFromProperties(getClass(), "program_title"));
 
         // 위치를 Platform에 따라 조정함
         setLocationByPlatform(true);
