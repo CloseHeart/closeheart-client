@@ -1,6 +1,8 @@
 package kr.ac.gachon.sw.closeheart.client.util;
 
 import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.plaf.FontUIResource;
 import java.awt.*;
 import java.io.File;
@@ -62,6 +64,28 @@ public class Util {
         } catch (Exception e) {
             e.printStackTrace();
             return null;
+        }
+    }
+
+    /*
+     * Textfield 업데이트 감지
+     * @original https://stackoverflow.com/questions/28913312/change-listener-for-a-jtextfield
+     */
+    @FunctionalInterface
+    public interface detectUpdateListener extends DocumentListener {
+        void update(DocumentEvent e);
+
+        @Override
+        default void insertUpdate(DocumentEvent e) {
+            update(e);
+        }
+        @Override
+        default void removeUpdate(DocumentEvent e) {
+            update(e);
+        }
+        @Override
+        default void changedUpdate(DocumentEvent e) {
+            update(e);
         }
     }
 }
