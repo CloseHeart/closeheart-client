@@ -11,6 +11,7 @@ import kr.ac.gachon.sw.closeheart.client.util.Util;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
@@ -34,8 +35,11 @@ public class LoginForm extends BaseForm {
     private Socket loginServerSocket;
     private Scanner serverInput;
     private PrintWriter serverOutput;
+    private ConnectionInfo info;
 
     public LoginForm(ConnectionInfo connectionInfo) {
+        this.info = connectionInfo;
+
         // ContentPane 설정
         setContentPane(loginForm_Panel);
 
@@ -52,7 +56,7 @@ public class LoginForm extends BaseForm {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         // 로그인 서버 연결
-        connectLoginServer(connectionInfo);
+        connectLoginServer();
     }
 
     /*
@@ -70,13 +74,14 @@ public class LoginForm extends BaseForm {
             }
         });
 
-        RegisterForm registerForm = new RegisterForm();
+
         // Register Button Action
         btn_register.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 System.out.println("Register Clicked");
-                if(!registerForm.isShowing()) registerForm.setShowing();
+                RegisterForm registerForm = new RegisterForm(loginServerSocket);
+                registerForm.setVisible(true);
             }
         });
 
@@ -103,7 +108,7 @@ public class LoginForm extends BaseForm {
      * Login 서버 Socket 연결
      * @author Minjae Seon
      */
-    private void connectLoginServer(ConnectionInfo info) {
+    private void connectLoginServer() {
         // Login 서버 연결
         try {
             // 연결 시도
@@ -136,18 +141,36 @@ public class LoginForm extends BaseForm {
         serverOutput.println(loginRequest);
 
         while(serverInput.hasNextLine()) {
-            String line = serverInput.nextLine();
-            if(line.isEmpty()) line = serverInput.nextLine();
+            String line = "";
+            try {
+                line = serverInput.nextLine();
+                if (line.isEmpty()) line = serverInput.nextLine();
+            } catch (Exception e1) {
+                JOptionPane.showMessageDialog(this, "서버에 문제가 발생했습니다.", "오류", JOptionPane.WARNING_MESSAGE);
+                this.dispose();
+            }
+
             JsonObject object = JsonParser.parseString(line).getAsJsonObject();
 
             int responseCode = object.get("responseCode").getAsInt();
 
             if(responseCode == 200) {
                 String authToken = object.get("authToken").getAsString();
-                new FriendForm(loginServerSocket, authToken);
+                int mainPort = object.get("mainServerPort").getAsInt();
+
+                try {
+                    Socket mainServerSocket = new Socket(info.serverAddress, mainPort);
+                    new FriendForm(mainServerSocket, authToken);
+                } catch (Exception e) {
+                    JOptionPane.showMessageDialog(
+                            this,
+                            "친구 서버와의 연결에 실패했습니다. 잠시 후 다시 시도해주세요.",
+                            Util.getStrFromProperties(getClass(), "program_title") + " - 에러",
+                            JOptionPane.ERROR_MESSAGE);
+                }
                 this.dispose();
             }
-            else if(responseCode == 403) {
+            else if(responseCode == 401) {
                 JOptionPane.showMessageDialog(
                         this,
                         "아이디나 비밀번호가 틀렸습니다.",
