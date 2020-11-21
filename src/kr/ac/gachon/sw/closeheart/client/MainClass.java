@@ -5,7 +5,6 @@ import kr.ac.gachon.sw.closeheart.client.login.login.LoginForm;
 
 import java.io.*;
 
-
 /*
  * Application 구동용 Main Class
  * @author Minjae Seon
