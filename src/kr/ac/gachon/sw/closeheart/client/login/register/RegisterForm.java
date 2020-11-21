@@ -1,15 +1,11 @@
-package kr.ac.gachon.sw.closeheart.client.login.registerForm;
+package kr.ac.gachon.sw.closeheart.client.login.register;
 
 import kr.ac.gachon.sw.closeheart.client.base.BaseForm;
 import kr.ac.gachon.sw.closeheart.client.util.Util;
 
 import javax.swing.*;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.util.Arrays;
 
 /*

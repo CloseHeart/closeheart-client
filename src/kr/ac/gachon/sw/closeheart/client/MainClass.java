@@ -1,10 +1,9 @@
 package kr.ac.gachon.sw.closeheart.client;
 
 import kr.ac.gachon.sw.closeheart.client.connection.ConnectionInfo;
-import kr.ac.gachon.sw.closeheart.client.login.loginForm.LoginForm;
+import kr.ac.gachon.sw.closeheart.client.login.login.LoginForm;
 
 import java.io.*;
-import java.net.Socket;
 
 
 /*
@@ -21,7 +20,7 @@ public class MainClass {
     // Socket Connection 정보를 파일에서 얻기
     private static ConnectionInfo getServerInfo() {
         // Default Address & Port
-        ConnectionInfo info = new ConnectionInfo("aftermoon.dev", 27135);
+        ConnectionInfo info = new ConnectionInfo("localhost", 21325);
 
         try {
             // 파일에서 접속 정보 가져오기
@@ -35,7 +34,6 @@ public class MainClass {
         } catch (Exception e) {
             System.out.println("Error : " + e.getMessage() + "\nUsing default infomation.");
         }
-
         return info;
     }
 }
