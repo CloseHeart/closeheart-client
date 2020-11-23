@@ -10,6 +10,12 @@ import java.util.Scanner;
 
 public class FriendForm extends BaseForm {
     private JPanel friendForm_panel;
+    private JList list_friend;
+    private JButton btn_setting;
+    private JLabel lb_nickname;
+    private JLabel lb_email;
+    private JLabel lb_statusmsg;
+    private JLabel lb_covid19;
 
     private Socket socket;
     private Scanner serverInput;
