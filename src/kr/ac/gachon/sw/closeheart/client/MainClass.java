@@ -1,6 +1,5 @@
 package kr.ac.gachon.sw.closeheart.client;
 
-import kr.ac.gachon.sw.closeheart.client.connection.ConnectionInfo;
 import kr.ac.gachon.sw.closeheart.client.login.login.LoginForm;
 
 import java.io.*;

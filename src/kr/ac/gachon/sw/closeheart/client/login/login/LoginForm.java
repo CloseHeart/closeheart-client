@@ -3,7 +3,7 @@ package kr.ac.gachon.sw.closeheart.client.login.login;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import kr.ac.gachon.sw.closeheart.client.base.BaseForm;
-import kr.ac.gachon.sw.closeheart.client.connection.ConnectionInfo;
+import kr.ac.gachon.sw.closeheart.client.ConnectionInfo;
 import kr.ac.gachon.sw.closeheart.client.friend.friend.FriendForm;
 import kr.ac.gachon.sw.closeheart.client.login.register.RegisterForm;
 import kr.ac.gachon.sw.closeheart.client.util.Util;
@@ -181,10 +181,11 @@ public class LoginForm extends BaseForm {
                             Socket mainServerSocket = new Socket(info.serverAddress, mainPort);
                             new FriendForm(mainServerSocket, authToken);
                         } catch (Exception e) {
+                            e.printStackTrace();
                             // 연결 실패시 에러 출력
                             JOptionPane.showMessageDialog(
                                     this,
-                                    "친구 서버와의 연결에 실패했습니다. 잠시 후 다시 시도해주세요.",
+                                    "친구 서버와의 연결에 실패했습니다. 잠시 후 다시 시도해주세요.\n에러명 : " + e.getMessage(),
                                     Util.getStrFromProperties(getClass(), "program_title") + " - 에러",
                                     JOptionPane.ERROR_MESSAGE);
                         }

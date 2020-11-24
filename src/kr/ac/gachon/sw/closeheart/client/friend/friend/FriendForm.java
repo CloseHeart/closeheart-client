@@ -1,11 +1,16 @@
 package kr.ac.gachon.sw.closeheart.client.friend.friend;
 
 import kr.ac.gachon.sw.closeheart.client.base.BaseForm;
+import kr.ac.gachon.sw.closeheart.client.customlayout.friendlist.FriendListModel;
+import kr.ac.gachon.sw.closeheart.client.customlayout.friendlist.FriendListRenderer;
+import kr.ac.gachon.sw.closeheart.client.user.User;
 import kr.ac.gachon.sw.closeheart.client.util.Util;
 
 import javax.swing.*;
+import java.awt.*;
 import java.io.*;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 public class FriendForm extends BaseForm {
@@ -35,8 +40,25 @@ public class FriendForm extends BaseForm {
         // 각종 Action Event을 설정
         setEvent();
 
-        // Close Option 설정
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        // Friend List 설정
+        FriendListModel friendListModel = new FriendListModel();
+        FriendListRenderer friendListRenderer = new FriendListRenderer();
+
+        // 친구 정보 넣기 - 임시 데이터 삽입
+        for(int i = 0; i < 30; i++) {
+            friendListModel.add(new User("dd", "User", "상메", true));
+        }
+
+        // Data Model 설정
+        list_friend.setModel(friendListModel);
+
+        // Renderer 설정
+        list_friend.setCellRenderer(friendListRenderer);
+
+        // VERTICAL하게 Item이 나오도록 함
+        list_friend.setLayoutOrientation(JList.VERTICAL);
+
+
 
         // 소켓이 잘 연결되어있고 토큰이 비어있지 않다면
         if(socket.isConnected() && !authToken.isEmpty()) {
@@ -51,7 +73,7 @@ public class FriendForm extends BaseForm {
             catch (Exception e) {
                 JOptionPane.showMessageDialog(
                         this,
-                        "서버와 연결이 끊어졌습니다!",
+                        "오류가 발생했습니다!\n오류명" + e.getMessage(),
                         Util.getStrFromProperties(getClass(), "program_title") + " - 에러",
                         JOptionPane.ERROR_MESSAGE);
             }

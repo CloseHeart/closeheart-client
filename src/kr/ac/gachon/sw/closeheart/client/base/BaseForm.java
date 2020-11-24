@@ -1,5 +1,6 @@
 package kr.ac.gachon.sw.closeheart.client.base;
 
+import com.formdev.flatlaf.FlatLightLaf;
 import kr.ac.gachon.sw.closeheart.client.util.Util;
 
 import javax.swing.*;
@@ -48,6 +49,8 @@ public abstract class BaseForm extends JFrame {
                 super.windowOpened(e);
             }
         });
+
+        FlatLightLaf.install();
     }
 
     /*
