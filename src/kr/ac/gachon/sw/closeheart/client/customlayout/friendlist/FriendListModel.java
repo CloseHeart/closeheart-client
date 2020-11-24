@@ -6,11 +6,11 @@ import javax.swing.*;
 import javax.swing.event.ListDataListener;
 import java.util.ArrayList;
 
-public class FriendListModel implements ListModel {
+public class FriendListModel implements ListModel<User> {
     private ArrayList<User> friendList;
 
-    public FriendListModel() {
-        friendList = new ArrayList<>();
+    public FriendListModel(ArrayList<User> friendList) {
+        this.friendList = friendList;
     }
 
     @Override

@@ -18,7 +18,7 @@ public abstract class BaseForm extends JFrame {
 
     public BaseForm() {
         // Font Setting
-        Util.changeUIFont(new Font("NanumGothic", Font.PLAIN, 13));
+        Util.changeUIFont(new Font(Util.getStrFromProperties(getClass(), "default_font"), Font.PLAIN, 13));
 
         // 타이틀 설정
         setTitle(Util.getStrFromProperties(getClass(), "program_title"));

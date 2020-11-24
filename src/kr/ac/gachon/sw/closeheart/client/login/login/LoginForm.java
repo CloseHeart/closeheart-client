@@ -44,7 +44,7 @@ public class LoginForm extends BaseForm {
         setContentPane(loginForm_Panel);
 
         // Label에 Logo Image 삽입
-        lb_logo.setIcon(Util.resizeImage(new ImageIcon(getClass().getResource("/res/closeheart_logo_login.png")).getImage(), 200, 200, Image.SCALE_SMOOTH));
+        lb_logo.setIcon(Util.resizeImage(new ImageIcon(getClass().getResource("/res/img/closeheart_logo_login.png")).getImage(), 200, 200, Image.SCALE_SMOOTH));
 
         // Window 사이즈 설정
         setSize(300, 600);
