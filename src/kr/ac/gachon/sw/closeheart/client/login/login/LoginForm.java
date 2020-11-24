@@ -3,7 +3,7 @@ package kr.ac.gachon.sw.closeheart.client.login.login;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import kr.ac.gachon.sw.closeheart.client.base.BaseForm;
-import kr.ac.gachon.sw.closeheart.client.connection.ConnectionInfo;
+import kr.ac.gachon.sw.closeheart.client.ConnectionInfo;
 import kr.ac.gachon.sw.closeheart.client.friend.friend.FriendForm;
 import kr.ac.gachon.sw.closeheart.client.login.register.RegisterForm;
 import kr.ac.gachon.sw.closeheart.client.util.Util;
@@ -44,7 +44,7 @@ public class LoginForm extends BaseForm {
         setContentPane(loginForm_Panel);
 
         // Label에 Logo Image 삽입
-        lb_logo.setIcon(Util.resizeImage(new ImageIcon(getClass().getResource("/res/closeheart_logo_login.png")).getImage(), 200, 200, Image.SCALE_SMOOTH));
+        lb_logo.setIcon(Util.resizeImage(new ImageIcon(getClass().getResource("/res/img/closeheart_logo_login.png")).getImage(), 200, 200, Image.SCALE_SMOOTH));
 
         // Window 사이즈 설정
         setSize(300, 600);
@@ -120,6 +120,9 @@ public class LoginForm extends BaseForm {
             // Input / Output Stream 받기
             serverInput = new Scanner(new InputStreamReader(loginServerSocket.getInputStream()));
             serverOutput = new PrintWriter(new OutputStreamWriter(loginServerSocket.getOutputStream()), true);
+
+            // 엔터키 누르면 로그인 하도록 설정
+            this.getRootPane().setDefaultButton(btn_login);
         } catch (Exception e) {
             // 에러 발생시 에러 Dialog를 띄우고 프로그램 종료함
             JOptionPane.showMessageDialog(
@@ -132,91 +135,106 @@ public class LoginForm extends BaseForm {
         }
     }
 
+    /*
+     * 로그인 요청
+     * @param id 아이디
+     * @param password 비밀번호
+     */
     public void requestLogin(String id, String password) {
-        // 서버 연결이 잘 되어있다면
-        if (loginServerSocket.isConnected()) {
-            // 아이디와 비밀번호 (암호화)를 서버에 전송
-            HashMap<String, String> loginInfo = new HashMap<>();
-            loginInfo.put("id", id);
-            loginInfo.put("pw", Util.encryptSHA512(password));
+        if (!id.isEmpty() && !password.isEmpty()) {
+            // 서버 연결이 잘 되어있다면
+            if (loginServerSocket.isConnected()) {
+                // 아이디와 비밀번호 (암호화)를 서버에 전송
+                HashMap<String, String> loginInfo = new HashMap<>();
+                loginInfo.put("id", id);
+                loginInfo.put("pw", Util.encryptSHA512(password));
 
-            String loginRequest = Util.createRequestJSON(100, loginInfo);
-            serverOutput.println(loginRequest);
+                String loginRequest = Util.createRequestJSON(100, loginInfo);
+                serverOutput.println(loginRequest);
 
-            while (serverInput.hasNextLine()) {
-                String line = "";
-                try {
-                    line = serverInput.nextLine();
-                    if (line.isEmpty()) line = serverInput.nextLine();
-                } catch (Exception e1) {
-                    // 에러 발생시 에러 출력 후 종료
-                    JOptionPane.showMessageDialog(this, "서버에 문제가 발생했습니다.", "오류", JOptionPane.WARNING_MESSAGE);
-                    this.dispose();
-                    break;
-                }
-
-                // JsonObject로 변환
-                JsonObject object = JsonParser.parseString(line).getAsJsonObject();
-
-                // ResponseCode를 가져옴
-                int responseCode = object.get("responseCode").getAsInt();
-
-                // 200일경우
-                if (responseCode == 200) {
-                    // authToken과 메인 (친구) 서버 포트 가져옴
-                    String authToken = object.get("authToken").getAsString();
-                    int mainPort = object.get("mainServerPort").getAsInt();
-
-                    // 서버 연결 시도 후 성공하면 친구창으로 넘김
+                while (serverInput.hasNextLine()) {
+                    String line = "";
                     try {
-                        Socket mainServerSocket = new Socket(info.serverAddress, mainPort);
-                        new FriendForm(mainServerSocket, authToken);
-                    } catch (Exception e) {
-                        // 연결 실패시 에러 출력
+                        line = serverInput.nextLine();
+                        if (line.isEmpty()) line = serverInput.nextLine();
+                    } catch (Exception e1) {
+                        // 에러 발생시 에러 출력 후 종료
+                        JOptionPane.showMessageDialog(this, "서버에 문제가 발생했습니다.", "오류", JOptionPane.WARNING_MESSAGE);
+                        this.dispose();
+                        break;
+                    }
+
+                    // JsonObject로 변환
+                    JsonObject object = JsonParser.parseString(line).getAsJsonObject();
+
+                    // ResponseCode를 가져옴
+                    int responseCode = object.get("responseCode").getAsInt();
+
+                    // 200일경우
+                    if (responseCode == 200) {
+                        // authToken과 메인 (친구) 서버 포트 가져옴
+                        String authToken = object.get("authToken").getAsString();
+                        int mainPort = object.get("mainServerPort").getAsInt();
+
+                        // 서버 연결 시도 후 성공하면 친구창으로 넘김
+                        try {
+                            Socket mainServerSocket = new Socket(info.serverAddress, mainPort);
+                            new FriendForm(mainServerSocket, authToken);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            // 연결 실패시 에러 출력
+                            JOptionPane.showMessageDialog(
+                                    this,
+                                    "친구 서버와의 연결에 실패했습니다. 잠시 후 다시 시도해주세요.\n에러명 : " + e.getMessage(),
+                                    Util.getStrFromProperties(getClass(), "program_title") + " - 에러",
+                                    JOptionPane.ERROR_MESSAGE);
+                        }
+
+                        // 로그인 관련 통신 다 Close
+                        try {
+                            loginServerSocket.close();
+                            serverInput.close();
+                            serverOutput.close();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                        // 창닫기
+                        this.dispose();
+                        // 401 (아이디 or 비밀번호 틀렸을 경우)
+                    } else if (responseCode == 401) {
+                        // 틀렸다고 출력
                         JOptionPane.showMessageDialog(
                                 this,
-                                "친구 서버와의 연결에 실패했습니다. 잠시 후 다시 시도해주세요.",
+                                "아이디나 비밀번호가 틀렸습니다.",
+                                Util.getStrFromProperties(getClass(), "program_title") + " - 에러",
+                                JOptionPane.ERROR_MESSAGE);
+                    } else {
+                        // 알려지지 않은 코드의 경우 서버 문제이므로 잠시 후 다시 시도해달라고 알림
+                        JOptionPane.showMessageDialog(
+                                this,
+                                "문제가 발생했습니다. 잠시 후 다시 시도해주세요.",
                                 Util.getStrFromProperties(getClass(), "program_title") + " - 에러",
                                 JOptionPane.ERROR_MESSAGE);
                     }
-
-                    // 로그인 관련 통신 다 Close
-                    try {
-                        loginServerSocket.close();
-                        serverInput.close();
-                        serverOutput.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                    // 창닫기
-                    this.dispose();
-                // 401 (아이디 or 비밀번호 틀렸을 경우)
-                } else if (responseCode == 401) {
-                    // 틀렸다고 출력
-                    JOptionPane.showMessageDialog(
-                            this,
-                            "아이디나 비밀번호가 틀렸습니다.",
-                            Util.getStrFromProperties(getClass(), "program_title") + " - 에러",
-                            JOptionPane.ERROR_MESSAGE);
-                } else {
-                    // 알려지지 않은 코드의 경우 서버 문제이므로 잠시 후 다시 시도해달라고 알림
-                    JOptionPane.showMessageDialog(
-                            this,
-                            "문제가 발생했습니다. 잠시 후 다시 시도해주세요.",
-                            Util.getStrFromProperties(getClass(), "program_title") + " - 에러",
-                            JOptionPane.ERROR_MESSAGE);
+                    break;
                 }
-                break;
+            } else {
+                // 에러 발생시 에러 Dialog를 띄우고 프로그램 종료함
+                JOptionPane.showMessageDialog(
+                        this,
+                        "서버와의 연결이 비정상적으로 종료되었습니다. 프로그램을 다시 실행해주세요.",
+                        Util.getStrFromProperties(getClass(), "program_title") + " - 에러",
+                        JOptionPane.ERROR_MESSAGE);
+                System.exit(0);
             }
         }
         else {
-            // 에러 발생시 에러 Dialog를 띄우고 프로그램 종료함
+            // 아이디와 비밀번호 둘 중 하나라도 입력하지 않으면 경고창
             JOptionPane.showMessageDialog(
                     this,
-                    "서버와의 연결이 비정상적으로 종료되었습니다. 프로그램을 다시 실행해주세요.",
-                    Util.getStrFromProperties(getClass(), "program_title") + " - 에러",
-                    JOptionPane.ERROR_MESSAGE);
-            System.exit(0);
+                    "아이디와 비밀번호를 입력해주세요.",
+                    Util.getStrFromProperties(getClass(), "program_title"),
+                    JOptionPane.WARNING_MESSAGE);
         }
     }
 }

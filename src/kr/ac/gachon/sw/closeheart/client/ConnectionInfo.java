@@ -1,4 +1,4 @@
-package kr.ac.gachon.sw.closeheart.client.connection;
+package kr.ac.gachon.sw.closeheart.client;
 
 /*
  * 서버 연결 정보를 담고 있는 Class
