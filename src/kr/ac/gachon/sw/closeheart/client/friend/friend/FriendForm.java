@@ -1,5 +1,7 @@
 package kr.ac.gachon.sw.closeheart.client.friend.friend;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import kr.ac.gachon.sw.closeheart.client.base.BaseForm;
 import kr.ac.gachon.sw.closeheart.client.customlayout.friendlist.FriendListModel;
 import kr.ac.gachon.sw.closeheart.client.customlayout.friendlist.FriendListRenderer;
@@ -16,6 +18,8 @@ import java.io.*;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Scanner;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class FriendForm extends BaseForm {
     private JPanel friendForm_panel;
@@ -28,13 +32,16 @@ public class FriendForm extends BaseForm {
     private JButton btn_refresh;
 
     private Socket socket;
-    private Scanner serverInput;
+    private BufferedReader serverInput;
     private PrintWriter serverOutput;
     private ArrayList<User> friendList;
     private User myUserInfo;
+    private FriendFormThread thread;
+    private boolean isStopThread;
 
     public FriendForm(Socket socket, String authToken) {
         this.socket = socket;
+        myUserInfo = new User("", authToken, "", "");
 
         // ContentPane 설정
         setContentPane(friendForm_panel);
@@ -51,11 +58,8 @@ public class FriendForm extends BaseForm {
         // 닫기 이벤트 설정
         setClosingEvent();
 
-        // 내 정보 가져오기
-        getMyInfo(authToken);
-
-        // 친구 목록 설정
-        getFriendList();
+        // 쓰레드 시작
+        startThread();
     }
 
     @Override
@@ -74,22 +78,34 @@ public class FriendForm extends BaseForm {
         btn_refresh.addActionListener(e -> {
             System.out.println("Refresh Clicked");
         });
+
+        // 친구추가 버튼 액션
+        btn_addfriend.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                new AddFriendForm(socket, "유저토큰자리");
+            }
+        });
     }
 
+
     /*
-     * 내 정보 가져오기
+     * Thread 시작
      * @author Minjae Seon
      * @param authToken 인증 토큰
      */
-    private void getMyInfo(String authToken) {
+    private void startThread() {
         // 소켓이 잘 연결되어있고 토큰이 비어있지 않다면
-        if(socket.isConnected() && !authToken.isEmpty()) {
+        if(socket.isConnected() && !myUserInfo.getUserToken().isEmpty()) {
             try {
                 // Input / Output 생성
-                serverInput = new Scanner(new InputStreamReader(socket.getInputStream()));
+                serverInput = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                 serverOutput = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()), true);
 
-                myUserInfo = new User("id", authToken, "dd", "");
+                // 쓰레드 관련 설정
+                thread = new FriendFormThread(serverInput, serverOutput);
+                isStopThread = false;
+                thread.start();
 
                 // 창 활성화
                 this.setVisible(true);
@@ -141,33 +157,62 @@ public class FriendForm extends BaseForm {
      * 닫기 버튼 Event 설정
      * @author Minjae Seon
      */
-    public void setClosingEvent() {
+    private void setClosingEvent() {
         this.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         this.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent we) {
                int exitOption = JOptionPane.showConfirmDialog(getContentPane(),
                        "정말로 종료하시겠습니까?", "종료",
-                       JOptionPane.YES_NO_CANCEL_OPTION,
+                       JOptionPane.YES_NO_OPTION,
                        JOptionPane.QUESTION_MESSAGE);
 
                if(exitOption == JOptionPane.YES_OPTION) {
-                   String exitMessage = Util.createSingleKeyValueJSON(300, "token", myUserInfo.getUserToken());
-                   serverOutput.println(exitMessage);
-
-                   try {
-                       serverInput.close();
-                       serverOutput.close();
-
-                       socket.close();
-                   } catch (Exception e) {
-                       System.out.println(e.getMessage());
-                   }
-
-                   System.exit(0);
+                   thread.interrupt();
+                   isStopThread = true;
                }
             }
         });
     }
 
+    class FriendFormThread extends Thread {
+        private BufferedReader in;
+        private PrintWriter out;
+
+        public FriendFormThread(BufferedReader in, PrintWriter out) {
+            this.in = in;
+            this.out = out;
+        }
+
+        public void run() {
+            try {
+                while(!isStopThread) {
+                    System.out.println("Running!");
+
+
+                }
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(
+                        FriendForm.this,
+                        "오류가 발생했습니다!\n오류명" + e.getMessage(),
+                        "에러",
+                        JOptionPane.ERROR_MESSAGE);
+            }
+        }
+
+        @Override
+        public void interrupt() {
+            super.interrupt();
+            System.out.println("BYE");
+            out.println(Util.createSingleKeyValueJSON(301, "token", myUserInfo.getUserToken()));
+            try {
+                in.close();
+                out.close();
+                socket.close();
+            } catch (Exception e) {
+                System.out.println("ERROR");
+            }
+            System.exit(0);
+        }
+    }
 }

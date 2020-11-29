@@ -149,7 +149,7 @@ public class LoginForm extends BaseForm {
                 loginInfo.put("id", id);
                 loginInfo.put("pw", Util.encryptSHA512(password));
 
-                String loginRequest = Util.createRequestJSON(100, loginInfo);
+                String loginRequest = Util.createJSON(100, loginInfo);
                 serverOutput.println(loginRequest);
 
                 while (serverInput.hasNextLine()) {
@@ -168,7 +168,7 @@ public class LoginForm extends BaseForm {
                     JsonObject object = JsonParser.parseString(line).getAsJsonObject();
 
                     // ResponseCode를 가져옴
-                    int responseCode = object.get("responseCode").getAsInt();
+                    int responseCode = object.get("code").getAsInt();
 
                     // 200일경우
                     if (responseCode == 200) {

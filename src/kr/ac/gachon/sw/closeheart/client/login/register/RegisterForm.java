@@ -119,7 +119,7 @@ public class RegisterForm extends BaseForm {
                            registerHashMap.put("nick", tf_nickname.getText());
                            registerHashMap.put("birthday", new SimpleDateFormat("yyyy-MM-dd").format(sp_bday.getValue()));
 
-                           String registerJSON = Util.createRequestJSON(104, registerHashMap);
+                           String registerJSON = Util.createJSON(104, registerHashMap);
                            serverOutput.println(registerJSON);
 
                            while(serverInput.hasNextLine()) {
@@ -134,7 +134,7 @@ public class RegisterForm extends BaseForm {
 
                                JsonObject object = JsonParser.parseString(line).getAsJsonObject();
 
-                               int responseCode = object.get("responseCode").getAsInt();
+                               int responseCode = object.get("code").getAsInt();
 
                                if(responseCode == 200) {
                                    JOptionPane.showMessageDialog(this, "가입되었습니다! 입력하신 정보로 로그인 해주세요.", "안내", JOptionPane.INFORMATION_MESSAGE);
@@ -207,7 +207,7 @@ public class RegisterForm extends BaseForm {
 
                 JsonObject object = JsonParser.parseString(line).getAsJsonObject();
 
-                int responseCode = object.get("responseCode").getAsInt();
+                int responseCode = object.get("code").getAsInt();
 
                 if(responseCode == 200) {
                     String check = object.get("idcheck").getAsString();
@@ -257,7 +257,7 @@ public class RegisterForm extends BaseForm {
 
                 JsonObject object = JsonParser.parseString(line).getAsJsonObject();
 
-                int responseCode = object.get("responseCode").getAsInt();
+                int responseCode = object.get("code").getAsInt();
 
                 if(responseCode == 200) {
                     String check = object.get("emailcheck").getAsString();
@@ -307,7 +307,7 @@ public class RegisterForm extends BaseForm {
 
                 JsonObject object = JsonParser.parseString(line).getAsJsonObject();
 
-                int responseCode = object.get("responseCode").getAsInt();
+                int responseCode = object.get("code").getAsInt();
 
                 if(responseCode == 200) {
                     String check = object.get("nickcheck").getAsString();
