@@ -35,12 +35,13 @@ public class FriendForm extends BaseForm {
     private Scanner serverInput;
     private PrintWriter serverOutput;
     private ArrayList<User> friendList;
+    private String authToken;
     private User myUserInfo;
     private FriendFormThread thread;
 
     public FriendForm(Socket socket, String authToken) {
         this.socket = socket;
-        myUserInfo = new User("", authToken, "", "");
+        this.authToken = authToken;
 
         // ContentPane 설정
         setContentPane(friendForm_panel);
@@ -95,18 +96,48 @@ public class FriendForm extends BaseForm {
      */
     private void startThread() {
         // 소켓이 잘 연결되어있고 토큰이 비어있지 않다면
-        if(socket.isConnected() && !myUserInfo.getUserToken().isEmpty()) {
+        if(socket.isConnected() && !authToken.isEmpty()) {
             try {
                 // Input / Output 생성
                 serverInput = new Scanner(new InputStreamReader(socket.getInputStream()));
                 serverOutput = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()), true);
 
-                // 쓰레드 관련 설정
-                thread = new FriendFormThread(serverInput, serverOutput);
-                thread.start();
+                // 내 정보 요청
+                String requestMyInfo = Util.createSingleKeyValueJSON(300, "token", authToken);
+                serverOutput.println(requestMyInfo);
 
-                // 창 활성화
-                this.setVisible(true);
+                // 서버 입력 대기
+                if(serverInput.hasNextLine()) {
+                    String line = serverInput.nextLine();
+                    if(line.isEmpty()) line = serverInput.nextLine();
+                    JsonObject jsonObject = JsonParser.parseString(line).getAsJsonObject();
+
+                    int responseCode = jsonObject.get("code").getAsInt();
+
+                    // 코드 200 (정상)이면
+                    if(responseCode == 200) {
+                        // User 객체 생성
+                        myUserInfo = new User(jsonObject.get("id").getAsString(), authToken, jsonObject.get("nick").getAsString(), jsonObject.get("userMsg").getAsString());
+                    }
+                    // 실패하면 에러 생성
+                    else {
+                        JOptionPane.showMessageDialog(
+                                this,
+                                "서버 오류가 발생했습니다! 잠시 후 다시 시도해주세요.",
+                                Util.getStrFromProperties(getClass(), "program_title") + " - 에러",
+                                JOptionPane.ERROR_MESSAGE);
+                    }
+                }
+
+                // 객체가 null이 아니면
+                if(myUserInfo != null) {
+                    // 쓰레드 관련 설정
+                    thread = new FriendFormThread(serverInput, serverOutput);
+                    thread.start();
+
+                    // 창 활성화
+                    this.setVisible(true);
+                }
             }
             catch (Exception e) {
                 JOptionPane.showMessageDialog(
@@ -209,7 +240,7 @@ public class FriendForm extends BaseForm {
             super.interrupt();
 
             // 인터럽트 발생시 로그아웃 요청
-            out.println(Util.createSingleKeyValueJSON(301, "token", myUserInfo.getUserToken()));
+            out.println(Util.createSingleKeyValueJSON(301, "token", authToken));
             try {
                 // 통신 관련 다 닫기
                 in.close();
