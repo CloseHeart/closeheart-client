@@ -32,12 +32,11 @@ public class FriendForm extends BaseForm {
     private JButton btn_refresh;
 
     private Socket socket;
-    private BufferedReader serverInput;
+    private Scanner serverInput;
     private PrintWriter serverOutput;
     private ArrayList<User> friendList;
     private User myUserInfo;
     private FriendFormThread thread;
-    private boolean isStopThread;
 
     public FriendForm(Socket socket, String authToken) {
         this.socket = socket;
@@ -99,12 +98,11 @@ public class FriendForm extends BaseForm {
         if(socket.isConnected() && !myUserInfo.getUserToken().isEmpty()) {
             try {
                 // Input / Output 생성
-                serverInput = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                serverInput = new Scanner(new InputStreamReader(socket.getInputStream()));
                 serverOutput = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()), true);
 
                 // 쓰레드 관련 설정
                 thread = new FriendFormThread(serverInput, serverOutput);
-                isStopThread = false;
                 thread.start();
 
                 // 창 활성화
@@ -169,27 +167,33 @@ public class FriendForm extends BaseForm {
 
                if(exitOption == JOptionPane.YES_OPTION) {
                    thread.interrupt();
-                   isStopThread = true;
                }
             }
         });
     }
 
     class FriendFormThread extends Thread {
-        private BufferedReader in;
+        private Scanner in;
         private PrintWriter out;
 
-        public FriendFormThread(BufferedReader in, PrintWriter out) {
+        public FriendFormThread(Scanner in, PrintWriter out) {
             this.in = in;
             this.out = out;
         }
 
         public void run() {
             try {
-                while(!isStopThread) {
-                    System.out.println("Running!");
+                while(in.hasNextLine()) {
+                    String line = in.nextLine();
+                    if(line.isEmpty()) line = in.nextLine();
 
+                    JsonObject serverInput = JsonParser.parseString(line).getAsJsonObject();
+                    int code = serverInput.get("code").getAsInt();
 
+                    // 로그아웃 코드
+                    if(code == 301) {
+                        break;
+                    }
                 }
             } catch (Exception e) {
                 JOptionPane.showMessageDialog(
@@ -203,15 +207,23 @@ public class FriendForm extends BaseForm {
         @Override
         public void interrupt() {
             super.interrupt();
-            System.out.println("BYE");
+
+            // 인터럽트 발생시 로그아웃 요청
             out.println(Util.createSingleKeyValueJSON(301, "token", myUserInfo.getUserToken()));
             try {
+                // 통신 관련 다 닫기
                 in.close();
                 out.close();
                 socket.close();
             } catch (Exception e) {
-                System.out.println("ERROR");
+                JOptionPane.showMessageDialog(
+                        FriendForm.this,
+                        "오류가 발생했습니다!\n오류명" + e.getMessage(),
+                        "에러",
+                        JOptionPane.ERROR_MESSAGE);
             }
+
+            // 종료
             System.exit(0);
         }
     }
