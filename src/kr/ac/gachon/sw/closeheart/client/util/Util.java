@@ -96,37 +96,38 @@ public class Util {
     /*
      * Server에 전송할 Request JSON 생성
      * @author Minjae Seon
-     * @param requestCode 요청 코드
+     * @param type
+     * @param code 코드
      * @param elements 응답 내에 작성할 Property (속성)
      * @return JSON 형태로 되어있는 String
      */
-    public static String createRequestJSON(int requestCode, HashMap<String, String> elements) {
-        JsonObject responseJSON = new JsonObject();
-        responseJSON.addProperty("requestCode", requestCode);
+    public static String createJSON(int code, HashMap<String, String> elements) {
+        JsonObject json = new JsonObject();
+        json.addProperty("code", code);
 
         Iterator<String> keyIterator = elements.keySet().iterator();
 
         while(keyIterator.hasNext()) {
             String key = keyIterator.next();
             String value = elements.get(key);
-            responseJSON.addProperty(key, value);
+            json.addProperty(key, value);
         }
-        return responseJSON.toString();
+        return json.toString();
     }
 
     /*
-     * Request Code와 단일 Key-Value만을 담은 Response JSON 생성
+     * Code와 단일 Key-Value만을 담은 Response JSON 생성
      * @author Minjae Seon
-     * @param requestCode 응답 코드
+     * @param code 코드
      * @param key Key
      * @param value Value
      * @return JSON 형태로 되어있는 String
      */
-    public static String createSingleKeyValueJSON(int requestCode, String key, String value) {
-        JsonObject responseJSON = new JsonObject();
-        responseJSON.addProperty("requestCode", requestCode);
-        responseJSON.addProperty(key, value);
-        return responseJSON.toString();
+    public static String createSingleKeyValueJSON(int code, String key, String value) {
+        JsonObject json = new JsonObject();
+        json.addProperty("code", code);
+        json.addProperty(key, value);
+        return json.toString();
     }
 
     /*
