@@ -41,7 +41,7 @@ public class AddFriendForm extends BaseForm {
         // 각종 Action Event을 설정
         setEvent();
 
-        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
         this.setVisible(true);
     }

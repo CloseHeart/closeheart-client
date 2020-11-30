@@ -103,9 +103,12 @@ public class FriendForm extends BaseForm {
             @Override
             public void mousePressed(MouseEvent e) {
                 list_friend.setSelectedIndex(list_friend.locationToIndex(e.getPoint()));
+                System.out.println(list_friend.getSelectedValue().getUserID());
+
 
                 // 오른쪽 클릭
                 if(SwingUtilities.isRightMouseButton(e)) {
+
                     // 팝업 메뉴 설정
                     JPopupMenu friendPopupMenu = new JPopupMenu();
 
@@ -121,6 +124,20 @@ public class FriendForm extends BaseForm {
 
                     // 메뉴 보이기
                     friendPopupMenu.show(list_friend, e.getPoint().x, e.getPoint().y);
+                }
+                // 왼쪽 클릭
+                else if(SwingUtilities.isLeftMouseButton(e)) {
+                    // 더블 클릭이면
+                    if(e.getClickCount() == 2) {
+                        int chatOption = JOptionPane.showConfirmDialog(getContentPane(),
+                                list_friend.getSelectedValue().getUserNick() + "님께 채팅을 요청할까요?", "채팅",
+                                JOptionPane.YES_NO_OPTION,
+                                JOptionPane.QUESTION_MESSAGE);
+
+                        if (chatOption == JOptionPane.YES_OPTION) {
+                            // 채팅 연결
+                        }
+                    }
                 }
             }
         });
@@ -139,8 +156,6 @@ public class FriendForm extends BaseForm {
                 // Input / Output 생성
                 serverInput = new Scanner(new InputStreamReader(socket.getInputStream()));
                 serverOutput = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()), true);
-
-                getFriendList();
 
                 // 내 정보 요청
                 String requestMyInfo = Util.createSingleKeyValueJSON(300, "token", authToken);
@@ -177,6 +192,7 @@ public class FriendForm extends BaseForm {
                     // 창 활성화
                     this.setVisible(true);
                 }
+
             }
             catch (Exception e) {
                 JOptionPane.showMessageDialog(
