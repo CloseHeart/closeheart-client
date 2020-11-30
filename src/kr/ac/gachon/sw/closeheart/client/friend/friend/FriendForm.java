@@ -11,10 +11,7 @@ import kr.ac.gachon.sw.closeheart.client.util.Util;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.awt.event.*;
 import java.io.*;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -45,7 +42,7 @@ public class FriendForm extends BaseForm {
         this.socket = socket;
         this.authToken = authToken;
 
-        new ChatForm(socket, myUserInfo, new User[1]);
+        //new ChatForm(socket, myUserInfo, new User[1]);
 
         // ContentPane 설정
         setContentPane(friendForm_panel);
@@ -101,6 +98,32 @@ public class FriendForm extends BaseForm {
                 logout();
             }
         });
+
+        list_friend.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                list_friend.setSelectedIndex(list_friend.locationToIndex(e.getPoint()));
+
+                // 오른쪽 클릭
+                if(SwingUtilities.isRightMouseButton(e)) {
+                    // 팝업 메뉴 설정
+                    JPopupMenu friendPopupMenu = new JPopupMenu();
+
+                    // 메뉴 아이템
+                    JMenuItem requestChatItem = new JMenuItem("채팅 요청");
+                    JMenuItem detailInfoItem = new JMenuItem("상세 정보");
+                    JMenuItem removeFriendItem = new JMenuItem("친구 삭제");
+
+                    // 메뉴 아이템 추가
+                    friendPopupMenu.add(requestChatItem);
+                    friendPopupMenu.add(detailInfoItem);
+                    friendPopupMenu.add(removeFriendItem);
+
+                    // 메뉴 보이기
+                    friendPopupMenu.show(list_friend, e.getPoint().x, e.getPoint().y);
+                }
+            }
+        });
     }
 
 
@@ -116,6 +139,8 @@ public class FriendForm extends BaseForm {
                 // Input / Output 생성
                 serverInput = new Scanner(new InputStreamReader(socket.getInputStream()));
                 serverOutput = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()), true);
+
+                getFriendList();
 
                 // 내 정보 요청
                 String requestMyInfo = Util.createSingleKeyValueJSON(300, "token", authToken);
@@ -149,7 +174,6 @@ public class FriendForm extends BaseForm {
                     // 쓰레드 관련 설정
                     thread = new FriendFormThread(serverInput, serverOutput);
                     thread.start();
-
                     // 창 활성화
                     this.setVisible(true);
                 }
