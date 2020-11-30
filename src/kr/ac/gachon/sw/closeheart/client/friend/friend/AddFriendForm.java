@@ -44,12 +44,6 @@ public class AddFriendForm extends BaseForm {
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         this.setVisible(true);
-        btn_close.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                AddFriendForm.this.setVisible(false);
-            }
-        });
     }
 
     @Override

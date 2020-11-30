@@ -3,6 +3,7 @@ package kr.ac.gachon.sw.closeheart.client.friend.friend;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import kr.ac.gachon.sw.closeheart.client.base.BaseForm;
+import kr.ac.gachon.sw.closeheart.client.chat.chat.ChatForm;
 import kr.ac.gachon.sw.closeheart.client.customlayout.friendlist.FriendListModel;
 import kr.ac.gachon.sw.closeheart.client.customlayout.friendlist.FriendListRenderer;
 import kr.ac.gachon.sw.closeheart.client.user.User;
@@ -30,6 +31,7 @@ public class FriendForm extends BaseForm {
     private JButton btn_addfriend;
     private JButton btn_setting;
     private JButton btn_refresh;
+    private JButton btn_logout;
 
     private Socket socket;
     private Scanner serverInput;
@@ -42,6 +44,8 @@ public class FriendForm extends BaseForm {
     public FriendForm(Socket socket, String authToken) {
         this.socket = socket;
         this.authToken = authToken;
+
+        new ChatForm(socket, myUserInfo, new User[1]);
 
         // ContentPane 설정
         setContentPane(friendForm_panel);
@@ -56,7 +60,7 @@ public class FriendForm extends BaseForm {
         setEvent();
 
         // 닫기 이벤트 설정
-        setClosingEvent();
+        this.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 
         // 쓰레드 시작
         startThread();
@@ -84,6 +88,17 @@ public class FriendForm extends BaseForm {
             @Override
             public void actionPerformed(ActionEvent e) {
                 new AddFriendForm(socket, "유저토큰자리");
+            }
+        });
+
+        btn_logout.addActionListener(e -> {
+            logout();
+        });
+
+        this.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent we) {
+                logout();
             }
         });
     }
@@ -117,7 +132,7 @@ public class FriendForm extends BaseForm {
                     // 코드 200 (정상)이면
                     if(responseCode == 200) {
                         // User 객체 생성
-                        myUserInfo = new User(jsonObject.get("id").getAsString(), authToken, jsonObject.get("nick").getAsString(), jsonObject.get("userMsg").getAsString());
+                        myUserInfo = new User(authToken, jsonObject.get("id").getAsString(), jsonObject.get("nick").getAsString(), jsonObject.get("userMsg").getAsString(), null);
                     }
                     // 실패하면 에러 생성
                     else {
@@ -182,25 +197,15 @@ public class FriendForm extends BaseForm {
         }
     }
 
-    /*
-     * 닫기 버튼 Event 설정
-     * @author Minjae Seon
-     */
-    private void setClosingEvent() {
-        this.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-        this.addWindowListener(new WindowAdapter() {
-            @Override
-            public void windowClosing(WindowEvent we) {
-               int exitOption = JOptionPane.showConfirmDialog(getContentPane(),
-                       "정말로 종료하시겠습니까?", "종료",
-                       JOptionPane.YES_NO_OPTION,
-                       JOptionPane.QUESTION_MESSAGE);
+    private void logout() {
+        int exitOption = JOptionPane.showConfirmDialog(getContentPane(),
+                "정말로 종료하시겠습니까?", "종료",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.QUESTION_MESSAGE);
 
-               if(exitOption == JOptionPane.YES_OPTION) {
-                   thread.interrupt();
-               }
-            }
-        });
+        if(exitOption == JOptionPane.YES_OPTION) {
+            thread.interrupt();
+        }
     }
 
     class FriendFormThread extends Thread {
