@@ -5,21 +5,24 @@ public class User {
     private String userID;
     private String userNick;
     private String userMsg;
+    private User[] friends;
     private boolean isOnline;
 
+    // 토큰 포함 본인 유저 정보
+    public User(String userToken, String userID, String userNick, String userMsg, User[] friends) {
+        this.userToken = userToken;
+        this.userID = userID;
+        this.userNick = userNick;
+        this.userMsg = userMsg;
+        this.friends = friends;
+    }
 
+    // 친구에 담을 유저 정보
     public User(String userID, String userNick, String userMsg, boolean isOnline) {
         this.userID = userID;
         this.userNick = userNick;
         this.userMsg = userMsg;
         this.isOnline = isOnline;
-    }
-
-    public User(String userID, String userToken, String userNick, String userMsg) {
-        this.userID = userID;
-        this.userNick = userNick;
-        this.userMsg = userMsg;
-        this.userToken = userToken;
     }
 
     public String getUserToken() {
@@ -38,6 +41,8 @@ public class User {
         return userMsg;
     }
 
+    public User[] getFriends() { return friends; }
+
     public boolean getOnline() {
         return isOnline;
     }
@@ -45,6 +50,8 @@ public class User {
     public void setUserMsg(String userMsg) {
         this.userMsg = userMsg;
     }
+
+    public void setFriends(User[] friends) { this.friends = friends; }
 
     public void setOnline(boolean isOnline) {
         this.isOnline = isOnline;

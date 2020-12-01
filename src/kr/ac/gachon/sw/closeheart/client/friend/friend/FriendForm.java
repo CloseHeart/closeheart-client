@@ -3,6 +3,7 @@ package kr.ac.gachon.sw.closeheart.client.friend.friend;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import kr.ac.gachon.sw.closeheart.client.base.BaseForm;
+import kr.ac.gachon.sw.closeheart.client.chat.chat.ChatForm;
 import kr.ac.gachon.sw.closeheart.client.customlayout.friendlist.FriendListModel;
 import kr.ac.gachon.sw.closeheart.client.customlayout.friendlist.FriendListRenderer;
 import kr.ac.gachon.sw.closeheart.client.user.User;
@@ -10,10 +11,7 @@ import kr.ac.gachon.sw.closeheart.client.util.Util;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.awt.event.*;
 import java.io.*;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -30,6 +28,7 @@ public class FriendForm extends BaseForm {
     private JButton btn_addfriend;
     private JButton btn_setting;
     private JButton btn_refresh;
+    private JButton btn_logout;
 
     private Socket socket;
     private Scanner serverInput;
@@ -42,6 +41,8 @@ public class FriendForm extends BaseForm {
     public FriendForm(Socket socket, String authToken) {
         this.socket = socket;
         this.authToken = authToken;
+
+        //new ChatForm(socket, myUserInfo, new User[1]);
 
         // ContentPane 설정
         setContentPane(friendForm_panel);
@@ -56,7 +57,7 @@ public class FriendForm extends BaseForm {
         setEvent();
 
         // 닫기 이벤트 설정
-        setClosingEvent();
+        this.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 
         // 쓰레드 시작
         startThread();
@@ -84,6 +85,60 @@ public class FriendForm extends BaseForm {
             @Override
             public void actionPerformed(ActionEvent e) {
                 new AddFriendForm(socket, "유저토큰자리");
+            }
+        });
+
+        btn_logout.addActionListener(e -> {
+            logout();
+        });
+
+        this.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent we) {
+                logout();
+            }
+        });
+
+        list_friend.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                list_friend.setSelectedIndex(list_friend.locationToIndex(e.getPoint()));
+                System.out.println(list_friend.getSelectedValue().getUserID());
+
+
+                // 오른쪽 클릭
+                if(SwingUtilities.isRightMouseButton(e)) {
+
+                    // 팝업 메뉴 설정
+                    JPopupMenu friendPopupMenu = new JPopupMenu();
+
+                    // 메뉴 아이템
+                    JMenuItem requestChatItem = new JMenuItem("채팅 요청");
+                    JMenuItem detailInfoItem = new JMenuItem("상세 정보");
+                    JMenuItem removeFriendItem = new JMenuItem("친구 삭제");
+
+                    // 메뉴 아이템 추가
+                    friendPopupMenu.add(requestChatItem);
+                    friendPopupMenu.add(detailInfoItem);
+                    friendPopupMenu.add(removeFriendItem);
+
+                    // 메뉴 보이기
+                    friendPopupMenu.show(list_friend, e.getPoint().x, e.getPoint().y);
+                }
+                // 왼쪽 클릭
+                else if(SwingUtilities.isLeftMouseButton(e)) {
+                    // 더블 클릭이면
+                    if(e.getClickCount() == 2) {
+                        int chatOption = JOptionPane.showConfirmDialog(getContentPane(),
+                                list_friend.getSelectedValue().getUserNick() + "님께 채팅을 요청할까요?", "채팅",
+                                JOptionPane.YES_NO_OPTION,
+                                JOptionPane.QUESTION_MESSAGE);
+
+                        if (chatOption == JOptionPane.YES_OPTION) {
+                            // 채팅 연결
+                        }
+                    }
+                }
             }
         });
     }
@@ -117,7 +172,7 @@ public class FriendForm extends BaseForm {
                     // 코드 200 (정상)이면
                     if(responseCode == 200) {
                         // User 객체 생성
-                        myUserInfo = new User(jsonObject.get("id").getAsString(), authToken, jsonObject.get("nick").getAsString(), jsonObject.get("userMsg").getAsString());
+                        myUserInfo = new User(authToken, jsonObject.get("id").getAsString(), jsonObject.get("nick").getAsString(), jsonObject.get("userMsg").getAsString(), null);
                     }
                     // 실패하면 에러 생성
                     else {
@@ -134,10 +189,10 @@ public class FriendForm extends BaseForm {
                     // 쓰레드 관련 설정
                     thread = new FriendFormThread(serverInput, serverOutput);
                     thread.start();
-
                     // 창 활성화
                     this.setVisible(true);
                 }
+
             }
             catch (Exception e) {
                 JOptionPane.showMessageDialog(
@@ -182,25 +237,15 @@ public class FriendForm extends BaseForm {
         }
     }
 
-    /*
-     * 닫기 버튼 Event 설정
-     * @author Minjae Seon
-     */
-    private void setClosingEvent() {
-        this.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-        this.addWindowListener(new WindowAdapter() {
-            @Override
-            public void windowClosing(WindowEvent we) {
-               int exitOption = JOptionPane.showConfirmDialog(getContentPane(),
-                       "정말로 종료하시겠습니까?", "종료",
-                       JOptionPane.YES_NO_OPTION,
-                       JOptionPane.QUESTION_MESSAGE);
+    private void logout() {
+        int exitOption = JOptionPane.showConfirmDialog(getContentPane(),
+                "정말로 종료하시겠습니까?", "종료",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.QUESTION_MESSAGE);
 
-               if(exitOption == JOptionPane.YES_OPTION) {
-                   thread.interrupt();
-               }
-            }
-        });
+        if(exitOption == JOptionPane.YES_OPTION) {
+            thread.interrupt();
+        }
     }
 
     class FriendFormThread extends Thread {
