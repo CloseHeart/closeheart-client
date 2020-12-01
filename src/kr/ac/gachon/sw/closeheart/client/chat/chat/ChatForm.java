@@ -40,6 +40,9 @@ public class ChatForm extends BaseForm {
 
         // 친구 초대는 ChatForm에서 이루어져야 함
         // 그 전에! 무조건 친구폼에서 온라인인지 체크 필수!!!!
+
+        // 엔터키 누르면 채팅 전송
+        this.getRootPane().setDefaultButton(btn_send);
     }
 
     @Override
