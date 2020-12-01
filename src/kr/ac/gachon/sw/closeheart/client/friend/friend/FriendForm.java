@@ -84,7 +84,7 @@ public class FriendForm extends BaseForm {
         btn_addfriend.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                new AddFriendForm(socket, "유저토큰자리");
+                new AddFriendForm(socket, myUserInfo.getUserToken());
             }
         });
 
@@ -286,6 +286,40 @@ public class FriendForm extends BaseForm {
 
                     JsonObject serverInput = JsonParser.parseString(line).getAsJsonObject();
                     int code = serverInput.get("code").getAsInt();
+                    String msg = serverInput.get("msg").getAsString();
+                    System.out.println(line);
+
+                    // 친구 요청 처리 (msg에 friendrequest가 들어가있으면)
+                    if(msg.equals("friendrequest")) {
+                        if(code == 200) {
+                            JOptionPane.showMessageDialog(
+                                    FriendForm.this,
+                                    "친구 요청을 보냈습니다!",
+                                    "요청 성공",
+                                    JOptionPane.INFORMATION_MESSAGE);
+                        }
+                        else if(code == 400){
+                            JOptionPane.showMessageDialog(
+                                    FriendForm.this,
+                                    "존재하지 않는 ID입니다. ID를 다시 한번 확인해주세요.",
+                                    "경고",
+                                    JOptionPane.WARNING_MESSAGE);
+                        }
+                        else if(code == 401) {
+                            JOptionPane.showMessageDialog(
+                                    FriendForm.this,
+                                    "이미 친구이거나 친구 요청 대기중입니다!",
+                                    "경고",
+                                    JOptionPane.WARNING_MESSAGE);
+                        }
+                        else {
+                            JOptionPane.showMessageDialog(
+                                    FriendForm.this,
+                                    "서버 오류가 발생했습니다!",
+                                    "에러",
+                                    JOptionPane.ERROR_MESSAGE);
+                        }
+                    }
 
                     // 로그아웃 코드
                     if(code == 301) {
@@ -293,6 +327,7 @@ public class FriendForm extends BaseForm {
                     }
                 }
             } catch (Exception e) {
+                e.printStackTrace();
                 JOptionPane.showMessageDialog(
                         FriendForm.this,
                         "오류가 발생했습니다!\n오류명" + e.getMessage(),
