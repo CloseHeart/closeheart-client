@@ -168,11 +168,27 @@ public class FriendForm extends BaseForm {
                     JsonObject jsonObject = JsonParser.parseString(line).getAsJsonObject();
 
                     int responseCode = jsonObject.get("code").getAsInt();
+                    System.out.println(responseCode);
 
                     // 코드 200 (정상)이면
                     if(responseCode == 200) {
-                        // User 객체 생성
+                        System.out.println(jsonObject.toString());
                         myUserInfo = new User(authToken, jsonObject.get("id").getAsString(), jsonObject.get("nick").getAsString(), jsonObject.get("userMsg").getAsString(), null);
+                        lb_nickname.setText(myUserInfo.getUserNick());
+
+                        if(!myUserInfo.getUserMsg().isEmpty()) lb_statusmsg.setText(myUserInfo.getUserMsg());
+                        else lb_statusmsg.setText("상태메시지가 없습니다.");
+                    }
+                    else if(responseCode == 403) {
+                        JOptionPane.showMessageDialog(
+                                this,
+                                "자격 증명에 실패했습니다. 다시 로그인해주세요.",
+                                Util.getStrFromProperties(getClass(), "program_title") + " - 에러",
+                                JOptionPane.ERROR_MESSAGE);
+                        serverInput.close();
+                        serverOutput.close();
+                        socket.close();
+                        System.exit(0);
                     }
                     // 실패하면 에러 생성
                     else {
@@ -181,6 +197,10 @@ public class FriendForm extends BaseForm {
                                 "서버 오류가 발생했습니다! 잠시 후 다시 시도해주세요.",
                                 Util.getStrFromProperties(getClass(), "program_title") + " - 에러",
                                 JOptionPane.ERROR_MESSAGE);
+                        serverInput.close();
+                        serverOutput.close();
+                        socket.close();
+                        System.exit(0);
                     }
                 }
 
@@ -192,12 +212,12 @@ public class FriendForm extends BaseForm {
                     // 창 활성화
                     this.setVisible(true);
                 }
-
             }
             catch (Exception e) {
+                e.printStackTrace();
                 JOptionPane.showMessageDialog(
                         this,
-                        "오류가 발생했습니다!\n오류명" + e.getMessage(),
+                        "오류가 발생했습니다!\n오류명 : " + e.getMessage(),
                         Util.getStrFromProperties(getClass(), "program_title") + " - 에러",
                         JOptionPane.ERROR_MESSAGE);
             }
@@ -208,6 +228,7 @@ public class FriendForm extends BaseForm {
                     "서버와 연결이 끊어졌습니다!",
                     Util.getStrFromProperties(getClass(), "program_title") + " - 에러",
                     JOptionPane.ERROR_MESSAGE);
+            System.exit(0);
         }
     }
 
