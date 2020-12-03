@@ -3,7 +3,7 @@ package kr.ac.gachon.sw.closeheart.client.login.login;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import kr.ac.gachon.sw.closeheart.client.base.BaseForm;
-import kr.ac.gachon.sw.closeheart.client.ConnectionInfo;
+import kr.ac.gachon.sw.closeheart.client.object.ConnectionInfo;
 import kr.ac.gachon.sw.closeheart.client.friend.friend.FriendForm;
 import kr.ac.gachon.sw.closeheart.client.login.register.RegisterForm;
 import kr.ac.gachon.sw.closeheart.client.util.Util;
