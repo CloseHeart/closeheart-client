@@ -1,6 +1,6 @@
 package kr.ac.gachon.sw.closeheart.client.customlayout.friendlist;
 
-import kr.ac.gachon.sw.closeheart.client.user.User;
+import kr.ac.gachon.sw.closeheart.client.object.User;
 import kr.ac.gachon.sw.closeheart.client.util.Util;
 
 import javax.swing.*;

@@ -3,10 +3,9 @@ package kr.ac.gachon.sw.closeheart.client.friend.friend;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import kr.ac.gachon.sw.closeheart.client.base.BaseForm;
-import kr.ac.gachon.sw.closeheart.client.chat.chat.ChatForm;
 import kr.ac.gachon.sw.closeheart.client.customlayout.friendlist.FriendListModel;
 import kr.ac.gachon.sw.closeheart.client.customlayout.friendlist.FriendListRenderer;
-import kr.ac.gachon.sw.closeheart.client.user.User;
+import kr.ac.gachon.sw.closeheart.client.object.User;
 import kr.ac.gachon.sw.closeheart.client.util.Util;
 
 import javax.swing.*;
@@ -16,8 +15,6 @@ import java.io.*;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Scanner;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public class FriendForm extends BaseForm {
     private JPanel friendForm_panel;

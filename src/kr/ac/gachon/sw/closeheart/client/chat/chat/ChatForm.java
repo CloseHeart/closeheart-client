@@ -1,11 +1,9 @@
 package kr.ac.gachon.sw.closeheart.client.chat.chat;
 
 import kr.ac.gachon.sw.closeheart.client.base.BaseForm;
-import kr.ac.gachon.sw.closeheart.client.user.User;
-import kr.ac.gachon.sw.closeheart.client.util.Util;
+import kr.ac.gachon.sw.closeheart.client.object.User;
 
 import javax.swing.*;
-import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.net.Socket;

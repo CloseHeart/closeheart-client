@@ -1,4 +1,4 @@
-package kr.ac.gachon.sw.closeheart.client.user;
+package kr.ac.gachon.sw.closeheart.client.object;
 
 public class User {
     private String userToken;
