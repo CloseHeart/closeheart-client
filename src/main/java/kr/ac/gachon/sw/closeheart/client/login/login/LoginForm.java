@@ -3,6 +3,7 @@ package kr.ac.gachon.sw.closeheart.client.login.login;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import kr.ac.gachon.sw.closeheart.client.base.BaseForm;
+import kr.ac.gachon.sw.closeheart.client.login.find.FindForm;
 import kr.ac.gachon.sw.closeheart.client.object.ConnectionInfo;
 import kr.ac.gachon.sw.closeheart.client.friend.friend.FriendForm;
 import kr.ac.gachon.sw.closeheart.client.login.register.RegisterForm;
@@ -32,6 +33,7 @@ public class LoginForm extends BaseForm {
     private JLabel lb_forgotpassword;
     private JLabel lb_logo;
     private JCheckBox cb_saveid;
+    private JButton btn_findpw;
     private Socket loginServerSocket;
     private Scanner serverInput;
     private PrintWriter serverOutput;
@@ -44,7 +46,7 @@ public class LoginForm extends BaseForm {
         setContentPane(loginForm_Panel);
 
         // Label에 Logo Image 삽입
-        lb_logo.setIcon(Util.resizeImage(new ImageIcon(getClass().getResource("/res/img/closeheart_logo_login.png")).getImage(), 200, 200, Image.SCALE_SMOOTH));
+        lb_logo.setIcon(Util.resizeImage(new ImageIcon(getClass().getResource("/img/closeheart_logo_login.png")).getImage(), 200, 200, Image.SCALE_SMOOTH));
 
         // Window 사이즈 설정
         setSize(300, 600);
@@ -86,11 +88,12 @@ public class LoginForm extends BaseForm {
         });
 
         // Forgot Password Clicked Event
-        lb_forgotpassword.addMouseListener(new MouseAdapter() {
+        btn_findpw.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
                 System.out.println("Find PW Clicked");
-                super.mouseClicked(e);
+                FindForm findForm = new FindForm(loginServerSocket);
+                findForm.setVisible(true);
             }
         });
 

@@ -122,7 +122,7 @@ public class RegisterForm extends BaseForm {
                            String registerJSON = Util.createJSON(104, registerHashMap);
                            serverOutput.println(registerJSON);
 
-                           while(serverInput.hasNextLine()) {
+                           if(serverInput.hasNextLine()) {
                                String line = "";
                                try {
                                    line = serverInput.nextLine();
@@ -146,7 +146,6 @@ public class RegisterForm extends BaseForm {
                                    JOptionPane.showMessageDialog(this, "서버 에러가 발생했습니다. 잠시 후 다시 시도해주세요.", "오류", JOptionPane.ERROR_MESSAGE);
                                }
                                this.dispose();
-                               break;
                            }
                        }
                        else {
@@ -190,12 +189,27 @@ public class RegisterForm extends BaseForm {
             }
         });
 
+        // Email TextField 변경시
+        tf_email.getDocument().addDocumentListener((Util.detectUpdateListener) e -> {
+            isCheckEmail = false;
+        });
+
+        // 닉네임 TextField 변경시
+        tf_nickname.getDocument().addDocumentListener((Util.detectUpdateListener) e -> {
+            isCheckNick = false;
+        });
+
+        // 아이디 TextField 변경시
+        tf_id.getDocument().addDocumentListener((Util.detectUpdateListener) e -> {
+            isCheckID = false;
+        });
+
         // ID Check
         btn_idcheck.addActionListener(e ->  {
             String idCheckJSON = Util.createSingleKeyValueJSON(101, "id", tf_id.getText());
             serverOutput.println(idCheckJSON);
 
-            while(serverInput.hasNextLine()) {
+            if(serverInput.hasNextLine()) {
                 String line = "";
                 try {
                     line = serverInput.nextLine();
@@ -237,7 +251,6 @@ public class RegisterForm extends BaseForm {
                     isCheckID = false;
                     this.dispose();
                 }
-                break;
             }
         });
 
@@ -245,7 +258,7 @@ public class RegisterForm extends BaseForm {
             String emailCheckJSON = Util.createSingleKeyValueJSON(102, "email", tf_email.getText());
             serverOutput.println(emailCheckJSON);
 
-            while(serverInput.hasNextLine()) {
+            if(serverInput.hasNextLine()) {
                 String line = "";
                 try {
                     line = serverInput.nextLine();
@@ -287,7 +300,6 @@ public class RegisterForm extends BaseForm {
                     isCheckEmail = false;
                     this.dispose();
                 }
-                break;
             }
         });
 
@@ -295,7 +307,7 @@ public class RegisterForm extends BaseForm {
             String nickCheckJSON = Util.createSingleKeyValueJSON(103, "nick", tf_nickname.getText());
             serverOutput.println(nickCheckJSON);
 
-            while(serverInput.hasNextLine()) {
+            if(serverInput.hasNextLine()) {
                 String line = "";
                 try {
                     line = serverInput.nextLine();
@@ -337,7 +349,6 @@ public class RegisterForm extends BaseForm {
                     isCheckNick = false;
                     this.dispose();
                 }
-                break;
             }
         });
     }

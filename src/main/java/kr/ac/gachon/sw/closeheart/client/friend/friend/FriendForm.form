@@ -43,7 +43,7 @@
                   <borderPainted value="false"/>
                   <contentAreaFilled value="false"/>
                   <doubleBuffered value="false"/>
-                  <icon value="res/img/baseline_person_add_black_18dp.png"/>
+                  <icon value="img/baseline_person_add_black_18dp.png"/>
                   <text value=""/>
                 </properties>
               </component>
@@ -54,7 +54,7 @@
                 <properties>
                   <borderPainted value="false"/>
                   <contentAreaFilled value="false"/>
-                  <icon value="res/img/baseline_settings_black_18dp.png"/>
+                  <icon value="img/baseline_settings_black_18dp.png"/>
                   <selected value="false"/>
                   <text value=""/>
                 </properties>
@@ -71,7 +71,7 @@
                 <properties>
                   <borderPainted value="false"/>
                   <contentAreaFilled value="false"/>
-                  <icon value="res/img/baseline_refresh_black_18dp.png"/>
+                  <icon value="img/baseline_refresh_black_18dp.png"/>
                   <text value=""/>
                 </properties>
               </component>
@@ -83,7 +83,7 @@
                   <borderPainted value="false"/>
                   <contentAreaFilled value="false"/>
                   <focusPainted value="false"/>
-                  <icon value="res/img/baseline_exit_to_app_black_18dp.png"/>
+                  <icon value="img/baseline_exit_to_app_black_18dp.png"/>
                   <text value=""/>
                 </properties>
               </component>

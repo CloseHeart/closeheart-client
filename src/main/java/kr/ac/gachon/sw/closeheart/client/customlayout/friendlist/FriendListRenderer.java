@@ -37,7 +37,7 @@ public class FriendListRenderer extends JPanel implements ListCellRenderer<User>
 
         // 프로필 사진 Label
         try {
-            userImage.setIcon(Util.resizeImage(new ImageIcon(getClass().getResource("/res/img/default_profile.png")).getImage(), 50, 50, Image.SCALE_SMOOTH));
+            userImage.setIcon(Util.resizeImage(new ImageIcon(getClass().getResource("/img/default_profile.png")).getImage(), 50, 50, Image.SCALE_SMOOTH));
         } catch (Exception e) {
             e.printStackTrace();
             userImage.setText("Error");

@@ -48,7 +48,7 @@ public class FriendForm extends BaseForm {
         setSize(500, 800);
 
         // 설정 아이콘 사이즈 줄이기
-        btn_setting.setIcon(Util.resizeImage(new ImageIcon(getClass().getResource("/res/img/baseline_settings_black_18dp.png")).getImage(), 18, 18, Image.SCALE_SMOOTH));
+        btn_setting.setIcon(Util.resizeImage(new ImageIcon(getClass().getResource("/img/baseline_settings_black_18dp.png")).getImage(), 18, 18, Image.SCALE_SMOOTH));
 
         // 각종 Action Event을 설정
         setEvent();
