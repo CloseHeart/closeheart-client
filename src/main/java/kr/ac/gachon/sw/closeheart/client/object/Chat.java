@@ -4,11 +4,11 @@ import java.util.Calendar;
 
 public class Chat {
     int chatType;
-    User chatOwner;
+    String chatOwner;
     String chatMsg;
     Calendar chatTime;
 
-    public Chat(int chatType, User chatOwner, String chatMsg, Calendar chatTime) {
+    public Chat(int chatType, String chatOwner, String chatMsg, Calendar chatTime) {
         this.chatType = chatType;
         this.chatOwner = chatOwner;
         this.chatMsg = chatMsg;
@@ -19,7 +19,7 @@ public class Chat {
         return chatType;
     }
 
-    public User getChatOwner() {
+    public String getChatOwner() {
         return chatOwner;
     }
 

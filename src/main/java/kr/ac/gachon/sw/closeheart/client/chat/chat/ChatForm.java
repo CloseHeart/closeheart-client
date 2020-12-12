@@ -1,10 +1,13 @@
 package kr.ac.gachon.sw.closeheart.client.chat.chat;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import kr.ac.gachon.sw.closeheart.client.base.BaseForm;
 import kr.ac.gachon.sw.closeheart.client.customlayout.chat.ChatModel;
 import kr.ac.gachon.sw.closeheart.client.customlayout.chat.ChatRenderer;
 import kr.ac.gachon.sw.closeheart.client.object.Chat;
 import kr.ac.gachon.sw.closeheart.client.object.User;
+import kr.ac.gachon.sw.closeheart.client.util.Util;
 
 import javax.swing.*;
 import java.awt.event.WindowAdapter;
@@ -15,6 +18,7 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.Scanner;
 
 public class ChatForm extends BaseForm {
@@ -25,6 +29,9 @@ public class ChatForm extends BaseForm {
     private JTextArea tf_message;
 
     private Socket socket;
+    private Scanner in;
+    private PrintWriter out;
+
     private User myUser;
     private ArrayList<User> friendUser;
     private ArrayList<Chat> chatList;
@@ -45,9 +52,8 @@ public class ChatForm extends BaseForm {
 
         setVisible(true);
 
-        // 친구 초대는 ChatForm에서 이루어져야 함
-        // 그 전에! 무조건 친구폼에서 온라인인지 체크 필수!!!!
-        setChat();
+        // 초기 설정
+        initialSetting();
 
         // 엔터키 누르면 채팅 전송
         this.getRootPane().setDefaultButton(btn_send);
@@ -69,7 +75,26 @@ public class ChatForm extends BaseForm {
 
     }
 
-    // 테스트용
+    private void initialSetting() {
+        try {
+            in = new Scanner(new InputStreamReader(socket.getInputStream()));
+            out = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()), true);
+
+            HashMap<String, String> connectMap = new HashMap<>();
+            connectMap.put("token", myUser.getUserToken());
+            connectMap.put("nickName", myUser.getUserMsg());
+            out.println(Util.createJSON(210, connectMap));
+
+            setChat();
+
+            Thread thread = new ChatFormThread(socket, in, out);
+            thread.start();
+        } catch (Exception e) {
+
+        }
+    }
+
+    // 채팅 설정
     private void setChat() {
         // Friend List 설정
         chatList = new ArrayList<>();
@@ -85,15 +110,6 @@ public class ChatForm extends BaseForm {
 
         // VERTICAL하게 Item이 나오도록 함
         list_chat.setLayoutOrientation(JList.VERTICAL);
-
-        // 친구 정보 넣기 - 임시 데이터 삽입
-        int t = 0;
-        for(int i = 0; i < 30; i++) {
-            User user = new User("id", "Nick " + i, "dd", true);
-            chatList.add(new Chat( t, user, "좀 긴 메시지 asdfdsadfasdfasdfasdfsadfasdadfsafdsfdafsdaasfdasfdasfdasdfasdfasdffsd", Calendar.getInstance()));
-            if(t == 0) t = 1;
-            else t = 0;
-        }
     }
 
     private void exitChatRoom() {
@@ -103,6 +119,11 @@ public class ChatForm extends BaseForm {
                 JOptionPane.QUESTION_MESSAGE);
         if(exitOption == JOptionPane.YES_OPTION) {
             try {
+                out.println(Util.createSingleKeyValueJSON(212, "token", myUser.getUserToken()));
+
+                out.close();
+                in.close();
+
                 socket.close();
             } catch (Exception e) {
                 e.printStackTrace();
@@ -117,17 +138,38 @@ public class ChatForm extends BaseForm {
         private Scanner in;
         private PrintWriter out;
 
-        public ChatFormThread(Socket socket) {
+        public ChatFormThread(Socket socket, Scanner in, PrintWriter out) {
             this.socket = socket;
+            this.in = in;
+            this.out = out;
         }
 
         public void run() {
             try {
-                in = new Scanner(new InputStreamReader(socket.getInputStream()));
-                out = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()));
-
                 while(in.hasNextLine()) {
+                    String line = in.nextLine();
+                    if(line.isEmpty()) line = in.nextLine();
 
+                    JsonObject serverInput = JsonParser.parseString(line).getAsJsonObject();
+
+                    String type = serverInput.get("type").getAsString();
+                    String user = serverInput.get("user").getAsString();
+
+                    // 접속 처리
+                    if(type.equals("join")) {
+                        System.out.println(user + " join");
+                        chatList.add(new Chat(2, user, user + "님이 입장하셨습니다.", Calendar.getInstance()));
+                    }
+                    // 메시지 처리
+                    else if(type.equals("message")) {
+                        String msg = serverInput.get("msg").getAsString();
+                        chatList.add(new Chat(1, user, msg, Calendar.getInstance()));
+                    }
+                    // 퇴장 처리
+                    else if(type.equals("exit")) {
+                        System.out.println(user + " exit");
+                        chatList.add(new Chat(2, user, user + "님이 퇴장하셨습니다.", Calendar.getInstance()));
+                    }
                 }
             }
             catch (Exception e) {

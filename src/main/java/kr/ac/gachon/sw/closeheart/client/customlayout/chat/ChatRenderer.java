@@ -51,13 +51,14 @@ public class ChatRenderer extends JPanel implements ListCellRenderer<Chat> {
         chatPanel.setBackground(new Color(178, 199, 217));
 
         // 채팅 전송자 닉네임
-        chatSender.setText(value.getChatOwner().getUserNick());
+        chatSender.setText(value.getChatOwner());
 
         // 채팅 내용
         chatMessage.setText(value.getChatMsg());
 
         // Chat Type 0 -> 본인 메시지
         // Chat Type 1 -> 타인 메시지
+        // Chat Type 2 -> 공통 메시지
         if(value.getChatType() == 0) {
             // 오른쪽
             this.add(chatPanel, BorderLayout.EAST);
@@ -66,7 +67,7 @@ public class ChatRenderer extends JPanel implements ListCellRenderer<Chat> {
             chatMsgPanel.setBackground(Color.ORANGE);
             chatMessage.setBackground(Color.ORANGE);
         }
-        else {
+        else if (value.getChatType() == 1) {
             // 왼쪽
             this.add(chatPanel, BorderLayout.WEST);
 
@@ -74,7 +75,17 @@ public class ChatRenderer extends JPanel implements ListCellRenderer<Chat> {
             chatMsgPanel.setBackground(Color.WHITE);
             chatMessage.setBackground(Color.WHITE);
         }
+        else {
+            // 가운데
+            this.add(chatPanel, BorderLayout.CENTER);
 
+            // 밝은 회색
+            chatMsgPanel.setBackground(Color.LIGHT_GRAY);
+            chatMessage.setBackground(Color.LIGHT_GRAY);
+
+            // 제거
+            chatPanel.remove(chatSender);
+        }
         // JPanel 반환
         return this;
     }
