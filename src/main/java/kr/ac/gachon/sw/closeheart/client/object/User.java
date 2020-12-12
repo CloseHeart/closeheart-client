@@ -1,4 +1,4 @@
-package kr.ac.gachon.sw.closeheart.server.object;
+package kr.ac.gachon.sw.closeheart.client.object;
 
 import java.util.ArrayList;
 
