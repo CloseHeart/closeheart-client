@@ -83,7 +83,7 @@ public class FriendForm extends BaseForm {
         btn_addfriend.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                new AddFriendForm(socket, myUserInfo.getUserToken());
+                new AddFriendForm(socket, myUserInfo);
             }
         });
 
@@ -140,9 +140,6 @@ public class FriendForm extends BaseForm {
                             if (chatOption == JOptionPane.YES_OPTION) {
                                 // 채팅 연결
                             }
-                        }
-                        else {
-
                         }
                     }
                 }
@@ -321,6 +318,13 @@ public class FriendForm extends BaseForm {
                             JOptionPane.showMessageDialog(
                                     FriendForm.this,
                                     "이미 친구이거나 친구 요청 대기중입니다!",
+                                    "경고",
+                                    JOptionPane.WARNING_MESSAGE);
+                        }
+                        else if(code == 402) {
+                            JOptionPane.showMessageDialog(
+                                    FriendForm.this,
+                                    "스스로에게는 친구 요청을 보낼 수 없습니다!",
                                     "경고",
                                     JOptionPane.WARNING_MESSAGE);
                         }

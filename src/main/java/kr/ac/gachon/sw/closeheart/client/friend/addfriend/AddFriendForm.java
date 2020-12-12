@@ -3,6 +3,7 @@ package kr.ac.gachon.sw.closeheart.client.friend.addfriend;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import kr.ac.gachon.sw.closeheart.client.base.BaseForm;
+import kr.ac.gachon.sw.closeheart.client.object.User;
 import kr.ac.gachon.sw.closeheart.client.util.Util;
 
 import javax.swing.*;
@@ -26,11 +27,11 @@ public class AddFriendForm extends BaseForm {
     private JLabel lb_addfriend_title;
     private JLabel lb_friendid;
     private Socket friendServerSocket;
-    private String userToken;
+    private User user;
 
-    public AddFriendForm(Socket friendServerSocket, String userToken) {
+    public AddFriendForm(Socket friendServerSocket, User user) {
         this.friendServerSocket = friendServerSocket;
-        this.userToken = userToken;
+        this.user = user;
 
         // ContentPane 설정
         setContentPane(addfriendForm_Panel);
@@ -49,21 +50,26 @@ public class AddFriendForm extends BaseForm {
     @Override
     public void setEvent() {
         btn_addfriend.addActionListener(e -> {
-            try {
-                PrintWriter output = new PrintWriter(new OutputStreamWriter(friendServerSocket.getOutputStream()), true);
+            if(!tf_requestID.getText().equals(user.getUserID())) {
+                try {
+                    PrintWriter output = new PrintWriter(new OutputStreamWriter(friendServerSocket.getOutputStream()), true);
 
-                // 친구 요청 JSON 생성
-                HashMap<String, String> requestFriendMap = new HashMap<>();
-                requestFriendMap.put("token", userToken);
-                requestFriendMap.put("requestID", tf_requestID.getText());
-                String requestFriendJSON = Util.createJSON(302, requestFriendMap);
+                    // 친구 요청 JSON 생성
+                    HashMap<String, String> requestFriendMap = new HashMap<>();
+                    requestFriendMap.put("token", user.getUserToken());
+                    requestFriendMap.put("requestID", tf_requestID.getText());
+                    String requestFriendJSON = Util.createJSON(302, requestFriendMap);
 
-                // 요청 전송
-                output.println(requestFriendJSON);
+                    // 요청 전송
+                    output.println(requestFriendJSON);
 
-                this.dispose();
-            } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, "에러가 발생했습니다!\n에러 내용 : " + ex.getMessage(), "오류", JOptionPane.ERROR_MESSAGE);
+                    this.dispose();
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(this, "에러가 발생했습니다!\n에러 내용 : " + ex.getMessage(), "오류", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+            else {
+                JOptionPane.showMessageDialog(this, "본인에게는 친구 요청을 보낼 수 없습니다!", "경고", JOptionPane.WARNING_MESSAGE);
             }
         });
     }
