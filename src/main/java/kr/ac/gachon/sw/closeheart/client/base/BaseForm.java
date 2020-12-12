@@ -26,9 +26,6 @@ public abstract class BaseForm extends JFrame {
         // 위치를 Platform에 따라 조정함
         setLocationByPlatform(true);
 
-        // 사이즈 조절 불가능하도록 설정
-        setResizable(false);
-
         // Window의 열리고 닫힘에 따라 isShowing 변수가 변하도록 함
         this.addWindowListener(new WindowAdapter() {
             @Override
