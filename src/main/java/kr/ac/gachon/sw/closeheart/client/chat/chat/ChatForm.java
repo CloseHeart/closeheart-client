@@ -26,10 +26,10 @@ public class ChatForm extends BaseForm {
 
     private Socket socket;
     private User myUser;
-    private User[] friendUser;
+    private ArrayList<User> friendUser;
     private ArrayList<Chat> chatList;
 
-    public ChatForm(Socket socket, User myUser, User[] friendUser) {
+    public ChatForm(Socket socket, User myUser, ArrayList<User>  friendUser) {
         this.socket = socket;
         this.myUser = myUser;
         this.friendUser = friendUser;
