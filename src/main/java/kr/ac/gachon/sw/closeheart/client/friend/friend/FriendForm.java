@@ -139,9 +139,6 @@ public class FriendForm extends BaseForm {
                                 // 채팅 연결
                             }
                         }
-                        else {
-
-                        }
                     }
                 }
             }
