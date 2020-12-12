@@ -8,43 +8,27 @@
     <properties/>
     <border type="none"/>
     <children>
-      <grid id="92132" layout-manager="GridLayoutManager" row-count="2" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+      <grid id="92132" layout-manager="GridLayoutManager" row-count="2" column-count="2" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
         <margin top="0" left="0" bottom="0" right="0"/>
         <constraints>
           <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
         </constraints>
         <properties/>
-        <border type="empty">
+        <border type="none">
           <size top="5" left="5" bottom="5" right="5"/>
         </border>
         <children>
-          <component id="f7493" class="javax.swing.JList" binding="list_chat">
-            <constraints>
-              <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="6" hsize-policy="2" anchor="0" fill="3" indent="0" use-parent-layout="false">
-                <preferred-size width="150" height="50"/>
-              </grid>
-            </constraints>
-            <properties/>
-          </component>
           <grid id="71cf7" layout-manager="GridLayoutManager" row-count="1" column-count="2" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
             <margin top="0" left="0" bottom="0" right="0"/>
             <constraints>
-              <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+              <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
             </constraints>
             <properties/>
-            <border type="none">
+            <border type="empty">
               <size top="5" left="5" bottom="5" right="5"/>
             </border>
             <children>
-              <component id="329ed" class="javax.swing.JTextArea" binding="tf_messageinput">
-                <constraints>
-                  <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="6" hsize-policy="6" anchor="0" fill="3" indent="0" use-parent-layout="false">
-                    <preferred-size width="150" height="50"/>
-                  </grid>
-                </constraints>
-                <properties/>
-              </component>
-              <component id="f5b11" class="javax.swing.JButton" binding="btn_send">
+              <component id="9196f" class="javax.swing.JButton" binding="btn_send">
                 <constraints>
                   <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
                 </constraints>
@@ -52,8 +36,40 @@
                   <text value="전송"/>
                 </properties>
               </component>
+              <scrollpane id="9ae7c">
+                <constraints>
+                  <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+                </constraints>
+                <properties/>
+                <border type="none"/>
+                <children>
+                  <component id="2ebb4" class="javax.swing.JTextArea" binding="tf_message">
+                    <constraints/>
+                    <properties>
+                      <columns value="30"/>
+                      <lineWrap value="true"/>
+                      <rows value="3"/>
+                    </properties>
+                  </component>
+                </children>
+              </scrollpane>
             </children>
           </grid>
+          <scrollpane id="f4fa9">
+            <constraints>
+              <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+            </constraints>
+            <properties/>
+            <border type="none"/>
+            <children>
+              <component id="f7493" class="javax.swing.JList" binding="list_chat">
+                <constraints/>
+                <properties>
+                  <foreground color="-10580293"/>
+                </properties>
+              </component>
+            </children>
+          </scrollpane>
         </children>
       </grid>
       <grid id="e2612" layout-manager="GridLayoutManager" row-count="2" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
@@ -91,7 +107,7 @@
                   <borderPainted value="false"/>
                   <contentAreaFilled value="false"/>
                   <focusPainted value="false"/>
-                  <icon value="res/img/baseline_exit_to_app_black_18dp.png"/>
+                  <icon value="img/baseline_exit_to_app_black_18dp.png"/>
                   <text value=""/>
                 </properties>
               </component>

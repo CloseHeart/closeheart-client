@@ -3,8 +3,10 @@ package kr.ac.gachon.sw.closeheart.client.friend.friend;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import kr.ac.gachon.sw.closeheart.client.base.BaseForm;
+import kr.ac.gachon.sw.closeheart.client.chat.chat.ChatForm;
 import kr.ac.gachon.sw.closeheart.client.customlayout.friendlist.FriendListModel;
 import kr.ac.gachon.sw.closeheart.client.customlayout.friendlist.FriendListRenderer;
+import kr.ac.gachon.sw.closeheart.client.friend.addfriend.AddFriendForm;
 import kr.ac.gachon.sw.closeheart.client.object.User;
 import kr.ac.gachon.sw.closeheart.client.util.Util;
 
@@ -38,8 +40,6 @@ public class FriendForm extends BaseForm {
     public FriendForm(Socket socket, String authToken) {
         this.socket = socket;
         this.authToken = authToken;
-
-        //new ChatForm(socket, myUserInfo, new User[1]);
 
         // ContentPane 설정
         setContentPane(friendForm_panel);
@@ -126,13 +126,21 @@ public class FriendForm extends BaseForm {
                 else if(SwingUtilities.isLeftMouseButton(e)) {
                     // 더블 클릭이면
                     if(e.getClickCount() == 2) {
-                        int chatOption = JOptionPane.showConfirmDialog(getContentPane(),
-                                list_friend.getSelectedValue().getUserNick() + "님께 채팅을 요청할까요?", "채팅",
-                                JOptionPane.YES_NO_OPTION,
-                                JOptionPane.QUESTION_MESSAGE);
+                        // 친구 객체
+                        User friendObject = list_friend.getSelectedValue();
+                        // 온라인 체크
+                        if(friendObject.getOnline()) {
+                            int chatOption = JOptionPane.showConfirmDialog(getContentPane(),
+                                    friendObject.getUserNick() + "님께 채팅을 요청할까요?", "채팅",
+                                    JOptionPane.YES_NO_OPTION,
+                                    JOptionPane.QUESTION_MESSAGE);
 
-                        if (chatOption == JOptionPane.YES_OPTION) {
-                            // 채팅 연결
+                            if (chatOption == JOptionPane.YES_OPTION) {
+                                // 채팅 연결
+                            }
+                        }
+                        else {
+
                         }
                     }
                 }
@@ -157,6 +165,8 @@ public class FriendForm extends BaseForm {
                 // 내 정보 요청
                 String requestMyInfo = Util.createSingleKeyValueJSON(300, "token", authToken);
                 serverOutput.println(requestMyInfo);
+
+                serverOutput.println(Util.createSingleKeyValueJSON(303, "token", authToken));
 
                 // 서버 입력 대기
                 if(serverInput.hasNextLine()) {

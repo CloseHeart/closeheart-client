@@ -1,26 +1,79 @@
 package kr.ac.gachon.sw.closeheart.client.customlayout.chat;
 
 import kr.ac.gachon.sw.closeheart.client.object.Chat;
-import kr.ac.gachon.sw.closeheart.client.object.User;
-
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 
 public class ChatRenderer extends JPanel implements ListCellRenderer<Chat> {
+    JPanel chatPanel = new JPanel();
+    JLabel chatSender = new JLabel();
+    JPanel chatMsgPanel = new JPanel() {
+        @Override
+        protected void paintComponent(Graphics g) {
+            super.paintComponent(g);
+            g.setColor(getBackground());
+            g.fillRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 5, 5);
+            g.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 5, 5);
+        }
+    };
+
+    JTextArea chatMessage = new JTextArea();
 
     public ChatRenderer() {
         this.setLayout(new BorderLayout());
+        chatPanel.setLayout(new BorderLayout());
+        chatMsgPanel.setLayout(new BorderLayout());
+
+        chatPanel.add(chatSender, BorderLayout.NORTH);
+        chatPanel.add(chatMsgPanel, BorderLayout.SOUTH);
+        chatMsgPanel.add(chatMessage, BorderLayout.CENTER);
+        chatSender.setOpaque(false);
         this.setOpaque(true);
     }
 
     @Override
     public Component getListCellRendererComponent(JList list, Chat value, int index, boolean isSelected, boolean cellHasFocus) {
-        // 으악 여기다가 채팅 메시지 레이아웃 제작
-        // 어떻게 만들지 고민중
+        chatMessage.setRows(value.getChatMsg().length() / 20);
+        chatMessage.setColumns(20);
+
+        chatMessage.setEditable(false);
+        chatMessage.setLineWrap(true);
+        chatMessage.setWrapStyleWord(true);
 
         // Border Setting
         this.setBorder(new EmptyBorder(5, 5, 5, 5));
+        chatSender.setBorder(new EmptyBorder(5, 1, 1, 5));
+        chatMessage.setBorder(new EmptyBorder(5, 5, 5, 5));
+
+        // Background Color는 Blue
+        this.setBackground(new Color(178, 199, 217));
+        chatPanel.setBackground(new Color(178, 199, 217));
+
+        // 채팅 전송자 닉네임
+        chatSender.setText(value.getChatOwner().getUserNick());
+
+        // 채팅 내용
+        chatMessage.setText(value.getChatMsg());
+
+        // Chat Type 0 -> 본인 메시지
+        // Chat Type 1 -> 타인 메시지
+        if(value.getChatType() == 0) {
+            // 오른쪽
+            this.add(chatPanel, BorderLayout.EAST);
+
+            // 오렌지
+            chatMsgPanel.setBackground(Color.ORANGE);
+            chatMessage.setBackground(Color.ORANGE);
+        }
+        else {
+            // 왼쪽
+            this.add(chatPanel, BorderLayout.WEST);
+
+            // 화이트
+            chatMsgPanel.setBackground(Color.WHITE);
+            chatMessage.setBackground(Color.WHITE);
+        }
 
         // JPanel 반환
         return this;

@@ -1,4 +1,4 @@
-package kr.ac.gachon.sw.closeheart.client.friend.friend;
+package kr.ac.gachon.sw.closeheart.client.friend.addfriend;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
