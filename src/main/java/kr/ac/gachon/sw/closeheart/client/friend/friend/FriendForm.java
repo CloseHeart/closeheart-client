@@ -18,6 +18,7 @@ import java.awt.event.*;
 import java.io.*;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.NoSuchElementException;
 import java.util.Scanner;
 
 public class FriendForm extends BaseForm {
@@ -57,6 +58,9 @@ public class FriendForm extends BaseForm {
 
         // 닫기 이벤트 설정
         this.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+
+        // 친구 목록 설정
+        setFriendList();
 
         // 쓰레드 시작
         startThread();
@@ -165,9 +169,6 @@ public class FriendForm extends BaseForm {
                 String requestMyInfo = Util.createSingleKeyValueJSON(300, "token", authToken);
                 serverOutput.println(requestMyInfo);
 
-                // 친구에 대한 정보가 있는지 요청 (있다면 가져와야하므로)
-                serverOutput.println(Util.createSingleKeyValueJSON(304, "token", authToken));
-
                 serverOutput.println(Util.createSingleKeyValueJSON(303, "token", authToken));
 
                 // 서버 입력 대기
@@ -182,6 +183,18 @@ public class FriendForm extends BaseForm {
                     // 코드 200 (정상)이면
                     if(responseCode == 200) {
                         System.out.println(jsonObject.toString());
+
+                        // 친구 목록 추출
+                        JsonArray friendArray = JsonParser.parseString(jsonObject.get("friend").getAsString()).getAsJsonArray();
+                        for(JsonElement jsonElement : friendArray) {
+                            JsonObject friendObject = JsonParser.parseString(jsonElement.getAsString()).getAsJsonObject();
+                            // 친구 객체 생성
+                            User friendInfo = new User(friendObject.get("userID").getAsString(), friendObject.get("userNick").getAsString(), friendObject.get("userMsg").getAsString(), friendObject.get("isOnline").getAsBoolean());
+
+                            // 친구 목록에 추가
+                            friendList.add(friendInfo);
+                        }
+
                         myUserInfo = new User(authToken, jsonObject.get("id").getAsString(), jsonObject.get("nick").getAsString(), jsonObject.get("userMsg").getAsString(), null);
                         lb_nickname.setText(myUserInfo.getUserNick());
 
@@ -242,10 +255,10 @@ public class FriendForm extends BaseForm {
     }
 
     /*
-     * 친구 목록 가져오기
+     * 친구 목록 설정
      * @author Minjae Seon
      */
-    private void getFriendList() {
+    private void setFriendList() {
         // Friend List 설정
         friendList = new ArrayList<>();
 
@@ -260,11 +273,6 @@ public class FriendForm extends BaseForm {
 
         // VERTICAL하게 Item이 나오도록 함
         list_friend.setLayoutOrientation(JList.VERTICAL);
-
-        // 친구 정보 넣기 - 임시 데이터 삽입
-        for(int i = 0; i < 30; i++) {
-            friendList.add(new User("dd", "User" + i, "상메", true));
-        }
     }
 
     private void logout() {
@@ -335,22 +343,17 @@ public class FriendForm extends BaseForm {
                                     "에러",
                                     JOptionPane.ERROR_MESSAGE);
                         }
-                    }else if(msg.equals("friend")){
-                        if(code == 200) {
-                            JsonArray friend_JsonArr = serverInput.get("friendlist").getAsJsonArray();
-                            ArrayList<User> friend_ArrList = new ArrayList<User>();
-                            // 받아온 JsonArray를 ArrayList로 바꾸는 과정
-                            for(int i = 0; i < friend_JsonArr.size(); i++){
-                                JsonObject jObject = friend_JsonArr.getAsJsonObject();
-                                String user_id = jObject.get("id").getAsString();
-                                String user_nick = jObject.get("nick").getAsString();
-                                String user_msg = jObject.get("msg").getAsString();
-                                // 온/오프라인 유무는 임시로 false
-                                User user = new User(user_id,user_nick,user_msg,false);
-                                friend_ArrList.add(user);
-                            }
-                            // GUI에서 친구 ArrayList 뿌려주기
+                    }
 
+                    // 코로나 API 관련 처리
+                    if(msg.equals("covid19")) {
+                        String newCnt = serverInput.get("newCnt").getAsString();
+                        String currDecideCnd = serverInput.get("currDecideCnd").getAsString();
+                        if(code == 200) {
+                            lb_covid19.setText("[코로나19] 오늘 추가 확진자 수 : " + newCnt + " / 총 확진자 수 : " + currDecideCnd);
+                        }
+                        else if(code == 500) {
+                            lb_covid19.setText("Welcome to CloseHeart!");
                         }
                     }
 
@@ -359,11 +362,18 @@ public class FriendForm extends BaseForm {
                         break;
                     }
                 }
+            } catch (NoSuchElementException e) {
+                JOptionPane.showMessageDialog(
+                        FriendForm.this,
+                        "서버와 연결이 끊어졌습니다!",
+                        "에러",
+                        JOptionPane.ERROR_MESSAGE);
+                System.exit(0);
             } catch (Exception e) {
                 e.printStackTrace();
                 JOptionPane.showMessageDialog(
                         FriendForm.this,
-                        "오류가 발생했습니다!\n오류명" + e.getMessage(),
+                        "오류가 발생했습니다!\n오류명 : " + e.getMessage(),
                         "에러",
                         JOptionPane.ERROR_MESSAGE);
             }
