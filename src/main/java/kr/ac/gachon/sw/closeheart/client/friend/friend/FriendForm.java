@@ -108,9 +108,10 @@ public class FriendForm extends BaseForm {
                 list_friend.setSelectedIndex(list_friend.locationToIndex(e.getPoint()));
                 System.out.println(list_friend.getSelectedValue().getUserID());
 
-
                 // 오른쪽 클릭
                 if(SwingUtilities.isRightMouseButton(e)) {
+                    // 친구 객체
+                    User friendObject = list_friend.getSelectedValue();
 
                     // 팝업 메뉴 설정
                     JPopupMenu friendPopupMenu = new JPopupMenu();
@@ -125,15 +126,30 @@ public class FriendForm extends BaseForm {
                     friendPopupMenu.add(detailInfoItem);
                     friendPopupMenu.add(removeFriendItem);
 
+
+                    requestChatItem.addActionListener(rce -> {
+                        if(friendObject.getOnline()) {
+                            // 채팅 연결
+                        }
+                        else {
+                            JOptionPane.showMessageDialog(
+                                    FriendForm.this,
+                                    friendObject.getUserNick() + "님은 오프라인 상태입니다.",
+                                    "알림",
+                                    JOptionPane.INFORMATION_MESSAGE);
+                        }
+                    });
+
                     // 메뉴 보이기
                     friendPopupMenu.show(list_friend, e.getPoint().x, e.getPoint().y);
                 }
                 // 왼쪽 클릭
                 else if(SwingUtilities.isLeftMouseButton(e)) {
+                    // 친구 객체
+                    User friendObject = list_friend.getSelectedValue();
+
                     // 더블 클릭이면
                     if(e.getClickCount() == 2) {
-                        // 친구 객체
-                        User friendObject = list_friend.getSelectedValue();
                         // 온라인 체크
                         if(friendObject.getOnline()) {
                             int chatOption = JOptionPane.showConfirmDialog(getContentPane(),
@@ -144,6 +160,13 @@ public class FriendForm extends BaseForm {
                             if (chatOption == JOptionPane.YES_OPTION) {
                                 // 채팅 연결
                             }
+                        }
+                        else {
+                            JOptionPane.showMessageDialog(
+                                    FriendForm.this,
+                                    friendObject.getUserNick() + "님은 오프라인 상태입니다.",
+                                    "알림",
+                                    JOptionPane.INFORMATION_MESSAGE);
                         }
                     }
                 }
