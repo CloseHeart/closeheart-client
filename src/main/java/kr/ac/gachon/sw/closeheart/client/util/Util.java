@@ -1,12 +1,16 @@
 package kr.ac.gachon.sw.closeheart.client.util;
 
 import com.google.gson.JsonObject;
+import kr.ac.gachon.sw.closeheart.client.object.ConnectionInfo;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.plaf.FontUIResource;
 import java.awt.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
 import java.math.BigInteger;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -145,5 +149,25 @@ public class Util {
         } catch (NoSuchAlgorithmException e) {
             return "";
         }
+    }
+
+    // Socket Connection 정보를 파일에서 얻기
+    public static ConnectionInfo getServerInfo() {
+        // Default Address & Port
+        ConnectionInfo info = new ConnectionInfo("localhost", 21325);
+
+        try {
+            // 파일에서 접속 정보 가져오기
+            File serverDataFile = new File("closeheart_server.dat");
+            FileReader fileReader = new FileReader(serverDataFile);
+            BufferedReader bufferedReader = new BufferedReader(fileReader);
+
+            // Connection Info를 담고 있는 파일은 첫 번째 줄에 서버 주소, 두 번째 줄에 포트 넘버를 가지고 있음.
+            info.serverAddress = bufferedReader.readLine();
+            info.serverPort = Integer.parseInt(bufferedReader.readLine());
+        } catch (Exception e) {
+            System.out.println("Error : " + e.getMessage() + "\nUsing default infomation.");
+        }
+        return info;
     }
 }

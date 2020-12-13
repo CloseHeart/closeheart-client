@@ -43,8 +43,6 @@ public class AddFriendForm extends BaseForm {
         setEvent();
 
         this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-
-        this.setVisible(true);
     }
 
     @Override
