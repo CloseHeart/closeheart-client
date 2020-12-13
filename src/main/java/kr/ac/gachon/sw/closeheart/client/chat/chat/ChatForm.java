@@ -80,7 +80,7 @@ public class ChatForm extends BaseForm {
             in = new Scanner(new InputStreamReader(socket.getInputStream()));
             out = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()), true);
 
-            HashMap<String, String> connectMap = new HashMap<>();
+            HashMap<String, Object> connectMap = new HashMap<>();
             connectMap.put("token", myUser.getUserToken());
             connectMap.put("nickName", myUser.getUserMsg());
             out.println(Util.createJSON(210, connectMap));

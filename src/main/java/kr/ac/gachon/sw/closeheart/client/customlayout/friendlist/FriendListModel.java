@@ -7,10 +7,10 @@ import javax.swing.event.ListDataListener;
 import java.util.ArrayList;
 
 public class FriendListModel implements ListModel<User> {
-    private ArrayList<User> friendList;
+    private static ArrayList<User> friendList;
 
-    public FriendListModel(ArrayList<User> friendList) {
-        this.friendList = friendList;
+    public FriendListModel() {
+        friendList = new ArrayList<>();
     }
 
     @Override
@@ -40,4 +40,12 @@ public class FriendListModel implements ListModel<User> {
     public void remove(int index) {
         friendList.remove(index);
     }
+
+    public void clear() { friendList.clear(); }
+
+    public ArrayList<User> getFriendList() {
+        return friendList;
+    }
+
+
 }

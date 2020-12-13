@@ -1,5 +1,6 @@
 package kr.ac.gachon.sw.closeheart.client.login.find;
 
+import com.github.lgooddatepicker.components.DatePicker;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import kr.ac.gachon.sw.closeheart.client.base.BaseForm;
@@ -12,6 +13,8 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.Scanner;
 
 public class FindForm extends BaseForm {
@@ -21,6 +24,9 @@ public class FindForm extends BaseForm {
     private JLabel lb_email;
     private JButton btn_send;
     private JButton btn_close;
+    private JTextField tf_find_id;
+    private JLabel lb_find_id;
+    private DatePicker dp_find_birthday;
 
     private Socket socket;
     private Scanner serverInput;
@@ -50,7 +56,7 @@ public class FindForm extends BaseForm {
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 
         // Window 사이즈 설정
-        setSize(300, 250);
+        setSize(300, 300);
 
         // 각종 Action Event을 설정
         setEvent();
@@ -76,7 +82,11 @@ public class FindForm extends BaseForm {
 
     private void findPassword() {
         if(socket.isConnected()) {
-            serverOutput.println(Util.createSingleKeyValueJSON(105, "email", tf_find_email.getText()));
+            HashMap<String, Object> resetPWMap = new HashMap<>();
+            resetPWMap.put("email", tf_find_email.getText());
+            resetPWMap.put("id", tf_find_id.getText());
+            resetPWMap.put("birthday", dp_find_birthday.getDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+            serverOutput.println(Util.createJSON(105, resetPWMap));
 
             if(serverInput.hasNextLine()) {
                 String line = "";
@@ -100,7 +110,7 @@ public class FindForm extends BaseForm {
                 else if(responseCode == 400) {
                     JOptionPane.showMessageDialog(
                             this,
-                            "등록된 이메일이 아닙니다. 이메일을 다시 한번 확인해주세요.",
+                            "일치하는 정보를 가진 유저를 찾을 수 없었습니다. 다시 한번 확인해주세요.",
                             "경고",
                             JOptionPane.WARNING_MESSAGE);
                 }
