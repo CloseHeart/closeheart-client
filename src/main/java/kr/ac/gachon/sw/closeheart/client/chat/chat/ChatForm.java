@@ -156,24 +156,26 @@ public class ChatForm extends BaseForm {
                     String user = serverInput.get("user").getAsString();
 
                     // 접속 처리
-                    if(type.equals("join")) {
-                        System.out.println(user + " join");
-                        chatList.add(new Chat(2, user, user + "님이 입장하셨습니다.", Calendar.getInstance()));
-                    }
-                    // 메시지 처리
-                    else if(type.equals("message")) {
-                        String msg = serverInput.get("msg").getAsString();
-                        chatList.add(new Chat(1, user, msg, Calendar.getInstance()));
-                    }
-                    // 퇴장 처리
-                    else if(type.equals("exit")) {
-                        System.out.println(user + " exit");
-                        chatList.add(new Chat(2, user, user + "님이 퇴장하셨습니다.", Calendar.getInstance()));
+                    switch (type) {
+                        case "join":
+                            System.out.println(user + " join");
+                            chatList.add(new Chat(2, user, user + "님이 입장하셨습니다.", Calendar.getInstance()));
+                            break;
+                        // 메시지 처리
+                        case "message":
+                            String msg = serverInput.get("msg").getAsString();
+                            chatList.add(new Chat(1, user, msg, Calendar.getInstance()));
+                            break;
+                        // 퇴장 처리
+                        case "exit":
+                            System.out.println(user + " exit");
+                            chatList.add(new Chat(2, user, user + "님이 퇴장하셨습니다.", Calendar.getInstance()));
+                            break;
                     }
                 }
             }
             catch (Exception e) {
-
+                e.printStackTrace();
             }
         }
     }

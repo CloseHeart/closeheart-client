@@ -14,6 +14,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
@@ -105,42 +106,45 @@ public class RegisterForm extends BaseForm {
                    if(isCheckEmail) {
                        // 닉네임 중복확인을 했는지 체크
                        if(isCheckNick) {
-                           DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+                           if(Timestamp.valueOf(dp_birthday.getDate().atStartOfDay()).getTime() < System.currentTimeMillis()) {
+                               DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-                           HashMap<String, Object> registerHashMap = new HashMap<>();
-                           registerHashMap.put("id", tf_id.getText());
-                           registerHashMap.put("pw", Util.encryptSHA512(String.valueOf(tf_password.getPassword())));
-                           registerHashMap.put("email", tf_email.getText());
-                           registerHashMap.put("nick", tf_nickname.getText());
-                           registerHashMap.put("birthday", dp_birthday.getDate().format(dateTimeFormatter));
+                               HashMap<String, Object> registerHashMap = new HashMap<>();
+                               registerHashMap.put("id", tf_id.getText());
+                               registerHashMap.put("pw", Util.encryptSHA512(String.valueOf(tf_password.getPassword())));
+                               registerHashMap.put("email", tf_email.getText());
+                               registerHashMap.put("nick", tf_nickname.getText());
+                               registerHashMap.put("birthday", dp_birthday.getDate().format(dateTimeFormatter));
 
-                           String registerJSON = Util.createJSON(104, registerHashMap);
-                           serverOutput.println(registerJSON);
+                               String registerJSON = Util.createJSON(104, registerHashMap);
+                               serverOutput.println(registerJSON);
 
-                           if(serverInput.hasNextLine()) {
-                               String line = "";
-                               try {
-                                   line = serverInput.nextLine();
-                                   if (line.isEmpty()) line = serverInput.nextLine();
-                               } catch (Exception e1) {
-                                   JOptionPane.showMessageDialog(this, "서버에 문제가 발생했습니다.", "오류", JOptionPane.WARNING_MESSAGE);
+                               if (serverInput.hasNextLine()) {
+                                   String line = "";
+                                   try {
+                                       line = serverInput.nextLine();
+                                       if (line.isEmpty()) line = serverInput.nextLine();
+                                   } catch (Exception e1) {
+                                       JOptionPane.showMessageDialog(this, "서버에 문제가 발생했습니다.", "오류", JOptionPane.WARNING_MESSAGE);
+                                       this.dispose();
+                                   }
+
+                                   JsonObject object = JsonParser.parseString(line).getAsJsonObject();
+
+                                   int responseCode = object.get("code").getAsInt();
+
+                                   if (responseCode == 200) {
+                                       JOptionPane.showMessageDialog(this, "가입되었습니다! 입력하신 정보로 로그인 해주세요.", "안내", JOptionPane.INFORMATION_MESSAGE);
+                                   } else if (responseCode == 403) {
+                                       JOptionPane.showMessageDialog(this, "중복값이 발견되었습니다. 다시 시도해주세요.", "오류", JOptionPane.WARNING_MESSAGE);
+                                   } else {
+                                       JOptionPane.showMessageDialog(this, "서버 에러가 발생했습니다. 잠시 후 다시 시도해주세요.", "오류", JOptionPane.ERROR_MESSAGE);
+                                   }
                                    this.dispose();
                                }
-
-                               JsonObject object = JsonParser.parseString(line).getAsJsonObject();
-
-                               int responseCode = object.get("code").getAsInt();
-
-                               if(responseCode == 200) {
-                                   JOptionPane.showMessageDialog(this, "가입되었습니다! 입력하신 정보로 로그인 해주세요.", "안내", JOptionPane.INFORMATION_MESSAGE);
-                               }
-                               else if(responseCode == 403) {
-                                   JOptionPane.showMessageDialog(this, "중복값이 발견되었습니다. 다시 시도해주세요.", "오류", JOptionPane.WARNING_MESSAGE);
-                               }
-                               else {
-                                   JOptionPane.showMessageDialog(this, "서버 에러가 발생했습니다. 잠시 후 다시 시도해주세요.", "오류", JOptionPane.ERROR_MESSAGE);
-                               }
-                               this.dispose();
+                           }
+                           else {
+                               JOptionPane.showMessageDialog(this, "올바른 생일을 입력해주세요.", "오류", JOptionPane.ERROR_MESSAGE);
                            }
                        }
                        else {
