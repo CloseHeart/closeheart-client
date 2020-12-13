@@ -51,21 +51,25 @@ public class AddFriendForm extends BaseForm {
     public void setEvent() {
         btn_addfriend.addActionListener(e -> {
             if(!tf_requestID.getText().equals(user.getUserID())) {
-                try {
-                    PrintWriter output = new PrintWriter(new OutputStreamWriter(friendServerSocket.getOutputStream()), true);
+                if (!tf_requestID.getText().isEmpty()) {
+                    try {
+                        PrintWriter output = new PrintWriter(new OutputStreamWriter(friendServerSocket.getOutputStream()), true);
 
-                    // 친구 요청 JSON 생성
-                    HashMap<String, String> requestFriendMap = new HashMap<>();
-                    requestFriendMap.put("token", user.getUserToken());
-                    requestFriendMap.put("requestID", tf_requestID.getText());
-                    String requestFriendJSON = Util.createJSON(302, requestFriendMap);
+                        // 친구 요청 JSON 생성
+                        HashMap<String, String> requestFriendMap = new HashMap<>();
+                        requestFriendMap.put("token", user.getUserToken());
+                        requestFriendMap.put("requestID", tf_requestID.getText());
+                        String requestFriendJSON = Util.createJSON(302, requestFriendMap);
 
-                    // 요청 전송
-                    output.println(requestFriendJSON);
-
-                    this.dispose();
-                } catch (Exception ex) {
-                    JOptionPane.showMessageDialog(this, "에러가 발생했습니다!\n에러 내용 : " + ex.getMessage(), "오류", JOptionPane.ERROR_MESSAGE);
+                        // 요청 전송
+                        output.println(requestFriendJSON);
+                        this.dispose();
+                    } catch (Exception ex) {
+                        JOptionPane.showMessageDialog(this, "에러가 발생했습니다!\n에러 내용 : " + ex.getMessage(), "오류", JOptionPane.ERROR_MESSAGE);
+                    }
+                }
+                else {
+                    JOptionPane.showMessageDialog(this, "아이디를 입력해주세요.", "경고", JOptionPane.WARNING_MESSAGE);
                 }
             }
             else {

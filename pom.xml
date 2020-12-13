@@ -25,5 +25,11 @@
             <artifactId>flatlaf</artifactId>
             <version>0.44</version>
         </dependency>
+
+        <dependency>
+            <groupId>com.github.lgooddatepicker</groupId>
+            <artifactId>LGoodDatePicker</artifactId>
+            <version>11.1.0</version>
+        </dependency>
     </dependencies>
 </project>

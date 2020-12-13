@@ -1,5 +1,6 @@
 package kr.ac.gachon.sw.closeheart.client.login.register;
 
+import com.github.lgooddatepicker.components.DatePicker;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import kr.ac.gachon.sw.closeheart.client.base.BaseForm;
@@ -17,6 +18,8 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Scanner;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /*
  * 회원가입 Form
@@ -27,7 +30,6 @@ public class RegisterForm extends BaseForm {
     private JTextField tf_email;
     private JTextField tf_nickname;
     private JPasswordField tf_password;
-    private JSpinner sp_bday;
     private JButton btn_emailcheck;
     private JButton btn_nickcheck;
     private JButton btn_register;
@@ -42,6 +44,7 @@ public class RegisterForm extends BaseForm {
     private JLabel lb_birthday;
     private JTextField tf_id;
     private JButton btn_idcheck;
+    private DatePicker dp_birthday;
 
     private Socket socket;
     private Scanner serverInput;
@@ -77,17 +80,6 @@ public class RegisterForm extends BaseForm {
 
         // 각종 Action Event을 설정
         setEvent();
-
-        // Spinner를 날짜 Model 및 Editor로 설정
-        SpinnerDateModel model = new SpinnerDateModel();
-        sp_bday.setModel(model);
-
-        JSpinner.DateEditor editor = new JSpinner.DateEditor(sp_bday, "yyyy-MM-dd");
-        sp_bday.setEditor(editor);
-
-        DateFormatter formatter = (DateFormatter) editor.getTextField().getFormatter();
-        formatter.setAllowsInvalid(false);
-        formatter.setOverwriteMode(true);
     }
 
     /*
@@ -117,7 +109,7 @@ public class RegisterForm extends BaseForm {
                            registerHashMap.put("pw", Util.encryptSHA512(String.valueOf(tf_password.getPassword())));
                            registerHashMap.put("email", tf_email.getText());
                            registerHashMap.put("nick", tf_nickname.getText());
-                           registerHashMap.put("birthday", new SimpleDateFormat("yyyy-MM-dd").format(sp_bday.getValue()));
+                           registerHashMap.put("birthday", new SimpleDateFormat("yyyy-MM-dd").format(dp_birthday.getDate()));
 
                            String registerJSON = Util.createJSON(104, registerHashMap);
                            serverOutput.println(registerJSON);
@@ -206,149 +198,182 @@ public class RegisterForm extends BaseForm {
 
         // ID Check
         btn_idcheck.addActionListener(e ->  {
-            String idCheckJSON = Util.createSingleKeyValueJSON(101, "id", tf_id.getText());
-            serverOutput.println(idCheckJSON);
+            Pattern idPattern = Pattern.compile("^[a-zA-Z0-9]{6,15}$");
+            Matcher matcher = idPattern.matcher(tf_id.getText());
+            if(matcher.find()) {
+                String idCheckJSON = Util.createSingleKeyValueJSON(101, "id", tf_id.getText());
+                serverOutput.println(idCheckJSON);
 
-            if(serverInput.hasNextLine()) {
-                String line = "";
-                try {
-                    line = serverInput.nextLine();
-                    if (line.isEmpty()) line = serverInput.nextLine();
-                } catch (Exception e1) {
-                    JOptionPane.showMessageDialog(this, "서버에 문제가 발생했습니다.", "오류", JOptionPane.WARNING_MESSAGE);
-                    this.dispose();
-                }
+                if(serverInput.hasNextLine()) {
+                    String line = "";
+                    try {
+                        line = serverInput.nextLine();
+                        if (line.isEmpty()) line = serverInput.nextLine();
+                    } catch (Exception e1) {
+                        JOptionPane.showMessageDialog(this, "서버에 문제가 발생했습니다.", "오류", JOptionPane.WARNING_MESSAGE);
+                        this.dispose();
+                    }
 
-                JsonObject object = JsonParser.parseString(line).getAsJsonObject();
+                    JsonObject object = JsonParser.parseString(line).getAsJsonObject();
 
-                int responseCode = object.get("code").getAsInt();
+                    int responseCode = object.get("code").getAsInt();
 
-                if(responseCode == 200) {
-                    String check = object.get("idcheck").getAsString();
-                    if(check.equals("true")) {
-                        JOptionPane.showMessageDialog(
-                                this,
-                                "이미 존재하는 아이디입니다.",
-                                Util.getStrFromProperties(getClass(), "program_title") + " - 알림",
-                                JOptionPane.WARNING_MESSAGE);
-                        isCheckID = false;
+                    if(responseCode == 200) {
+                        String check = object.get("idcheck").getAsString();
+                        if(check.equals("true")) {
+                            JOptionPane.showMessageDialog(
+                                    this,
+                                    "이미 존재하는 아이디입니다.",
+                                    Util.getStrFromProperties(getClass(), "program_title") + " - 알림",
+                                    JOptionPane.WARNING_MESSAGE);
+                            isCheckID = false;
+                        }
+                        else {
+                            JOptionPane.showMessageDialog(
+                                    this,
+                                    "사용할 수 있는 아이디입니다!",
+                                    Util.getStrFromProperties(getClass(), "program_title") + " - 알림",
+                                    JOptionPane.INFORMATION_MESSAGE);
+                            isCheckID = true;
+                        }
                     }
                     else {
                         JOptionPane.showMessageDialog(
                                 this,
-                                "사용할 수 있는 아이디입니다!",
-                                Util.getStrFromProperties(getClass(), "program_title") + " - 알림",
-                                JOptionPane.INFORMATION_MESSAGE);
-                        isCheckID = true;
+                                "에러가 발생했습니다. 잠시 후 다시 시도해주세요.",
+                                Util.getStrFromProperties(getClass(), "program_title") + " - 에러",
+                                JOptionPane.ERROR_MESSAGE);
+                        isCheckID = false;
+                        this.dispose();
                     }
                 }
-                else {
-                    JOptionPane.showMessageDialog(
-                            this,
-                            "에러가 발생했습니다. 잠시 후 다시 시도해주세요.",
-                            Util.getStrFromProperties(getClass(), "program_title") + " - 에러",
-                            JOptionPane.ERROR_MESSAGE);
-                    isCheckID = false;
-                    this.dispose();
-                }
+            }
+            else {
+                JOptionPane.showMessageDialog(
+                        this,
+                        "아이디는 6-15자로 된 알파벳 / 숫자만 가능합니다!",
+                        Util.getStrFromProperties(getClass(), "program_title") + " - 알림",
+                        JOptionPane.WARNING_MESSAGE);
+                isCheckID = false;
             }
         });
 
         btn_emailcheck.addActionListener(e -> {
-            String emailCheckJSON = Util.createSingleKeyValueJSON(102, "email", tf_email.getText());
-            serverOutput.println(emailCheckJSON);
+            Pattern mailPattern = Pattern.compile("(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|\"(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21\\x23-\\x5b\\x5d-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])*\")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21-\\x5a\\x53-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])+)\\])");
+            Matcher matcher = mailPattern.matcher(tf_email.getText());
+            if(matcher.find()) {
+                String emailCheckJSON = Util.createSingleKeyValueJSON(102, "email", tf_email.getText());
+                serverOutput.println(emailCheckJSON);
 
-            if(serverInput.hasNextLine()) {
-                String line = "";
-                try {
-                    line = serverInput.nextLine();
-                    if (line.isEmpty()) line = serverInput.nextLine();
-                } catch (Exception e1) {
-                    JOptionPane.showMessageDialog(this, "서버에 문제가 발생했습니다.", "오류", JOptionPane.WARNING_MESSAGE);
-                    this.dispose();
-                }
+                if (serverInput.hasNextLine()) {
+                    String line = "";
+                    try {
+                        line = serverInput.nextLine();
+                        if (line.isEmpty()) line = serverInput.nextLine();
+                    } catch (Exception e1) {
+                        JOptionPane.showMessageDialog(this, "서버에 문제가 발생했습니다.", "오류", JOptionPane.WARNING_MESSAGE);
+                        this.dispose();
+                    }
 
-                JsonObject object = JsonParser.parseString(line).getAsJsonObject();
+                    JsonObject object = JsonParser.parseString(line).getAsJsonObject();
 
-                int responseCode = object.get("code").getAsInt();
+                    int responseCode = object.get("code").getAsInt();
 
-                if(responseCode == 200) {
-                    String check = object.get("emailcheck").getAsString();
-                    if(check.equals("true")) {
+                    if (responseCode == 200) {
+                        String check = object.get("emailcheck").getAsString();
+                        if (check.equals("true")) {
+                            JOptionPane.showMessageDialog(
+                                    this,
+                                    "이미 존재하는 이메일입니다.",
+                                    Util.getStrFromProperties(getClass(), "program_title") + " - 알림",
+                                    JOptionPane.WARNING_MESSAGE);
+                            isCheckEmail = false;
+                        } else {
+                            JOptionPane.showMessageDialog(
+                                    this,
+                                    "사용할 수 있는 이메일입니다!",
+                                    Util.getStrFromProperties(getClass(), "program_title") + " - 알림",
+                                    JOptionPane.INFORMATION_MESSAGE);
+                            isCheckEmail = true;
+                        }
+                    } else {
                         JOptionPane.showMessageDialog(
                                 this,
-                                "이미 존재하는 이메일입니다.",
-                                Util.getStrFromProperties(getClass(), "program_title") + " - 알림",
-                                JOptionPane.WARNING_MESSAGE);
+                                "에러가 발생했습니다. 잠시 후 다시 시도해주세요.",
+                                Util.getStrFromProperties(getClass(), "program_title") + " - 에러",
+                                JOptionPane.ERROR_MESSAGE);
                         isCheckEmail = false;
-                    }
-                    else {
-                        JOptionPane.showMessageDialog(
-                                this,
-                                "사용할 수 있는 이메일입니다!",
-                                Util.getStrFromProperties(getClass(), "program_title") + " - 알림",
-                                JOptionPane.INFORMATION_MESSAGE);
-                        isCheckEmail = true;
+                        this.dispose();
                     }
                 }
-                else {
-                    JOptionPane.showMessageDialog(
-                            this,
-                            "에러가 발생했습니다. 잠시 후 다시 시도해주세요.",
-                            Util.getStrFromProperties(getClass(), "program_title") + " - 에러",
-                            JOptionPane.ERROR_MESSAGE);
-                    isCheckEmail = false;
-                    this.dispose();
-                }
+            }
+            else {
+                JOptionPane.showMessageDialog(
+                        this,
+                        "올바른 이메일을 입력해주세요!",
+                        Util.getStrFromProperties(getClass(), "program_title") + " - 알림",
+                        JOptionPane.WARNING_MESSAGE);
+                isCheckEmail = false;
             }
         });
 
         btn_nickcheck.addActionListener(e -> {
-            String nickCheckJSON = Util.createSingleKeyValueJSON(103, "nick", tf_nickname.getText());
-            serverOutput.println(nickCheckJSON);
+            Pattern nickPattern = Pattern.compile("^[a-zA-Z0-9가-힣]{3,20}$");
+            Matcher matcher = nickPattern.matcher(tf_nickname.getText());
 
-            if(serverInput.hasNextLine()) {
-                String line = "";
-                try {
-                    line = serverInput.nextLine();
-                    if (line.isEmpty()) line = serverInput.nextLine();
-                } catch (Exception e1) {
-                    JOptionPane.showMessageDialog(this, "서버에 문제가 발생했습니다.", "오류", JOptionPane.WARNING_MESSAGE);
-                    this.dispose();
-                }
+            if(matcher.find()) {
+                String nickCheckJSON = Util.createSingleKeyValueJSON(103, "nick", tf_nickname.getText());
+                serverOutput.println(nickCheckJSON);
 
-                JsonObject object = JsonParser.parseString(line).getAsJsonObject();
+                if (serverInput.hasNextLine()) {
+                    String line = "";
+                    try {
+                        line = serverInput.nextLine();
+                        if (line.isEmpty()) line = serverInput.nextLine();
+                    } catch (Exception e1) {
+                        JOptionPane.showMessageDialog(this, "서버에 문제가 발생했습니다.", "오류", JOptionPane.WARNING_MESSAGE);
+                        this.dispose();
+                    }
 
-                int responseCode = object.get("code").getAsInt();
+                    JsonObject object = JsonParser.parseString(line).getAsJsonObject();
 
-                if(responseCode == 200) {
-                    String check = object.get("nickcheck").getAsString();
-                    if(check.equals("true")) {
+                    int responseCode = object.get("code").getAsInt();
+
+                    if (responseCode == 200) {
+                        String check = object.get("nickcheck").getAsString();
+                        if (check.equals("true")) {
+                            JOptionPane.showMessageDialog(
+                                    this,
+                                    "이미 존재하는 닉네임입니다.",
+                                    Util.getStrFromProperties(getClass(), "program_title") + " - 알림",
+                                    JOptionPane.WARNING_MESSAGE);
+                            isCheckNick = false;
+                        } else {
+                            JOptionPane.showMessageDialog(
+                                    this,
+                                    "사용할 수 있는 닉네임입니다!",
+                                    Util.getStrFromProperties(getClass(), "program_title") + " - 알림",
+                                    JOptionPane.INFORMATION_MESSAGE);
+                            isCheckNick = true;
+                        }
+                    } else {
                         JOptionPane.showMessageDialog(
                                 this,
-                                "이미 존재하는 닉네임입니다.",
-                                Util.getStrFromProperties(getClass(), "program_title") + " - 알림",
-                                JOptionPane.WARNING_MESSAGE);
+                                "에러가 발생했습니다. 잠시 후 다시 시도해주세요.",
+                                Util.getStrFromProperties(getClass(), "program_title") + " - 에러",
+                                JOptionPane.ERROR_MESSAGE);
                         isCheckNick = false;
-                    }
-                    else {
-                        JOptionPane.showMessageDialog(
-                                this,
-                                "사용할 수 있는 닉네임입니다!",
-                                Util.getStrFromProperties(getClass(), "program_title") + " - 알림",
-                                JOptionPane.INFORMATION_MESSAGE);
-                        isCheckNick = true;
+                        this.dispose();
                     }
                 }
-                else {
-                    JOptionPane.showMessageDialog(
-                            this,
-                            "에러가 발생했습니다. 잠시 후 다시 시도해주세요.",
-                            Util.getStrFromProperties(getClass(), "program_title") + " - 에러",
-                            JOptionPane.ERROR_MESSAGE);
-                    isCheckNick = false;
-                    this.dispose();
-                }
+            }
+            else {
+                JOptionPane.showMessageDialog(
+                        this,
+                        "닉네임은 3~20글자의 영어, 숫자, 한글만 가능합니다!",
+                        Util.getStrFromProperties(getClass(), "program_title") + " - 알림",
+                        JOptionPane.WARNING_MESSAGE);
+                isCheckNick = false;
             }
         });
     }
