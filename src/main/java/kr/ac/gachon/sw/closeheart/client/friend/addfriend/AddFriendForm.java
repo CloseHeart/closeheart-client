@@ -76,5 +76,8 @@ public class AddFriendForm extends BaseForm {
                 JOptionPane.showMessageDialog(this, "본인에게는 친구 요청을 보낼 수 없습니다!", "경고", JOptionPane.WARNING_MESSAGE);
             }
         });
+        btn_close.addActionListener(e -> {
+            this.dispose();
+        });
     }
 }
