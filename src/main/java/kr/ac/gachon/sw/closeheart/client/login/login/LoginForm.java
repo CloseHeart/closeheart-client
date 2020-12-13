@@ -12,10 +12,7 @@ import kr.ac.gachon.sw.closeheart.client.util.Util;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Scanner;
@@ -40,25 +37,37 @@ public class LoginForm extends BaseForm {
     private ConnectionInfo info;
 
     public LoginForm(ConnectionInfo connectionInfo) {
-        this.info = connectionInfo;
+        // 파일 읽어오기
+        try{
+            FileReader rw = new FileReader("saveId.txt");
+            BufferedReader br = new BufferedReader( rw );
+            String readLine = null; String saveCurrentID = null;
+            while( ( readLine =  br.readLine()) != null ){ saveCurrentID = readLine; }
+            // 가장 최근에 저장된 ID값만 보이게
+            tf_id.setText(saveCurrentID);
+        }catch(IOException e) {
+            System.out.println(e);
+        }finally {
+            this.info = connectionInfo;
 
-        // ContentPane 설정
-        setContentPane(loginForm_Panel);
+            // ContentPane 설정
+            setContentPane(loginForm_Panel);
 
-        // Label에 Logo Image 삽입
-        lb_logo.setIcon(Util.resizeImage(new ImageIcon(getClass().getResource("/img/closeheart_logo_login.png")).getImage(), 200, 200, Image.SCALE_SMOOTH));
+            // Label에 Logo Image 삽입
+            lb_logo.setIcon(Util.resizeImage(new ImageIcon(getClass().getResource("/img/closeheart_logo_login.png")).getImage(), 200, 200, Image.SCALE_SMOOTH));
 
-        // Window 사이즈 설정
-        setSize(300, 600);
+            // Window 사이즈 설정
+            setSize(300, 600);
 
-        // 각종 Action Event을 설정
-        setEvent();
+            // 각종 Action Event을 설정
+            setEvent();
 
-        // Close Option 설정
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            // Close Option 설정
+            setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        // 로그인 서버 연결
-        connectLoginServer();
+            // 로그인 서버 연결
+            connectLoginServer();
+        }
     }
 
     /*
@@ -72,6 +81,13 @@ public class LoginForm extends BaseForm {
             public void actionPerformed(ActionEvent e) {
                 String id = tf_id.getText();
                 String pw = String.valueOf(tf_pw.getPassword());
+                try{
+                    FileWriter fw = new FileWriter( "saveId.txt" ,true);
+                    BufferedWriter bw = new BufferedWriter( fw );
+                    bw.write(id);
+                }catch(IOException exception){
+                    System.out.println(exception.getMessage());
+                }
                 requestLogin(id, pw);
             }
         });

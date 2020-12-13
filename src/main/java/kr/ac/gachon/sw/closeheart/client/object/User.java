@@ -53,7 +53,9 @@ public class User {
         this.userMsg = userMsg;
     }
 
-    public void setFriends(ArrayList<User> friends) { this.friends = friends; }
+    public void setFriends(User friend) {
+        friends.add(friend);
+    }
 
     public void setOnline(boolean isOnline) {
         this.isOnline = isOnline;

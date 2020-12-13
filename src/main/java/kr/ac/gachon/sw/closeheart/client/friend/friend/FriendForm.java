@@ -1,5 +1,7 @@
 package kr.ac.gachon.sw.closeheart.client.friend.friend;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import kr.ac.gachon.sw.closeheart.client.base.BaseForm;
@@ -162,6 +164,9 @@ public class FriendForm extends BaseForm {
                 // 내 정보 요청
                 String requestMyInfo = Util.createSingleKeyValueJSON(300, "token", authToken);
                 serverOutput.println(requestMyInfo);
+
+                // 친구에 대한 정보가 있는지 요청 (있다면 가져와야하므로)
+                serverOutput.println(Util.createSingleKeyValueJSON(304, "token", authToken));
 
                 serverOutput.println(Util.createSingleKeyValueJSON(303, "token", authToken));
 
@@ -329,6 +334,23 @@ public class FriendForm extends BaseForm {
                                     "서버 오류가 발생했습니다!",
                                     "에러",
                                     JOptionPane.ERROR_MESSAGE);
+                        }
+                    }else if(msg.equals("friend")){
+                        if(code == 200) {
+                            JsonArray friend_JsonArr = serverInput.get("friendlist").getAsJsonArray();
+                            ArrayList<User> friend_ArrList = new ArrayList<User>();
+                            // 받아온 JsonArray를 ArrayList로 바꾸는 과정
+                            for(int i = 0; i < friend_JsonArr.size(); i++){
+                                JsonObject jObject = friend_JsonArr.getAsJsonObject();
+                                String user_id = jObject.get("id").getAsString();
+                                String user_nick = jObject.get("nick").getAsString();
+                                String user_msg = jObject.get("msg").getAsString();
+                                // 온/오프라인 유무는 임시로 false
+                                User user = new User(user_id,user_nick,user_msg,false);
+                                friend_ArrList.add(user);
+                            }
+                            // GUI에서 친구 ArrayList 뿌려주기
+
                         }
                     }
 
