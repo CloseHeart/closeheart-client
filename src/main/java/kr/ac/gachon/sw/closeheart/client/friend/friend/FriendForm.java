@@ -8,6 +8,7 @@ import kr.ac.gachon.sw.closeheart.client.base.BaseForm;
 import kr.ac.gachon.sw.closeheart.client.customlayout.friendlist.FriendListModel;
 import kr.ac.gachon.sw.closeheart.client.customlayout.friendlist.FriendListRenderer;
 import kr.ac.gachon.sw.closeheart.client.friend.addfriend.AddFriendForm;
+import kr.ac.gachon.sw.closeheart.client.friend.setting.SettingForm;
 import kr.ac.gachon.sw.closeheart.client.login.login.LoginForm;
 import kr.ac.gachon.sw.closeheart.client.object.ConnectionInfo;
 import kr.ac.gachon.sw.closeheart.client.object.User;
@@ -18,14 +19,14 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
 import java.net.Socket;
-import java.util.ArrayList;
+import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 
 public class FriendForm extends BaseForm {
     private JPanel friendForm_panel;
-    private JList<User> list_friend;
+    private JList<User> list_onlinefriend;
     private JLabel lb_nickname;
     private JLabel lb_statusmsg;
     private JLabel lb_covid19;
@@ -33,17 +34,23 @@ public class FriendForm extends BaseForm {
     private JButton btn_setting;
     private JButton btn_refresh;
     private JButton btn_logout;
+    private JList<User> list_offlinefriend;
 
     private Socket socket;
     private Scanner serverInput;
     private PrintWriter serverOutput;
-    private FriendListModel friendListModel;
-    private FriendListRenderer friendListRenderer;
     private String authToken;
     private User myUserInfo;
     private FriendFormThread thread;
 
     private AddFriendForm addFriendForm;
+    private SettingForm settingForm;
+
+    private FriendListModel onlineFriendListModel;
+    private FriendListModel offlineFriendListModel;
+
+    private FriendListRenderer onlineFriendListRenderer;
+    private FriendListRenderer offlineFriendListRenderer;
 
     public FriendForm(Socket socket, String authToken) {
         this.socket = socket;
@@ -74,7 +81,7 @@ public class FriendForm extends BaseForm {
     public void setEvent() {
         // 설정 버튼 액션
         btn_setting.addActionListener(e -> {
-            System.out.println("Setting Clicked");
+            if(settingForm != null) settingForm.setVisible(true);
         });
 
         // 새로고침 버튼 액션
@@ -102,67 +109,100 @@ public class FriendForm extends BaseForm {
             }
         });
 
-        list_friend.addMouseListener(new MouseAdapter() {
+        list_onlinefriend.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
-                list_friend.setSelectedIndex(list_friend.locationToIndex(e.getPoint()));
-                // 친구 객체
-                User friendObject = list_friend.getSelectedValue();
+                if(onlineFriendListModel.getSize() > 0) {
+                    list_onlinefriend.setSelectedIndex(list_onlinefriend.locationToIndex(e.getPoint()));
+                    // 친구 객체
+                    User friendObject = list_onlinefriend.getSelectedValue();
 
-                // 오른쪽 클릭
-                if(SwingUtilities.isRightMouseButton(e)) {
-                    // 팝업 메뉴 설정
-                    JPopupMenu friendPopupMenu = new JPopupMenu();
+                    // 오른쪽 클릭
+                    if (SwingUtilities.isRightMouseButton(e)) {
+                        // 팝업 메뉴 설정
+                        JPopupMenu friendPopupMenu = new JPopupMenu();
 
-                    // 메뉴 아이템
-                    JMenuItem requestChatItem = new JMenuItem("채팅 요청");
-                    JMenuItem detailInfoItem = new JMenuItem("상세 정보");
-                    JMenuItem removeFriendItem = new JMenuItem("친구 삭제");
+                        // 메뉴 아이템
+                        JMenuItem requestChatItem = new JMenuItem("채팅 요청");
+                        JMenuItem detailInfoItem = new JMenuItem("상세 정보");
+                        JMenuItem removeFriendItem = new JMenuItem("친구 삭제");
 
-                    // 메뉴 아이템 추가
-                    friendPopupMenu.add(requestChatItem);
-                    friendPopupMenu.add(detailInfoItem);
-                    friendPopupMenu.add(removeFriendItem);
+                        // 메뉴 아이템 추가
+                        friendPopupMenu.add(requestChatItem);
+                        friendPopupMenu.add(detailInfoItem);
+                        friendPopupMenu.add(removeFriendItem);
 
 
-                    requestChatItem.addActionListener(rce -> {
-                        if(friendObject.getOnline()) {
-                            // 채팅 연결
-                        }
-                        else {
-                            JOptionPane.showMessageDialog(
-                                    FriendForm.this,
-                                    friendObject.getUserNick() + "님은 오프라인 상태입니다.",
-                                    "알림",
-                                    JOptionPane.INFORMATION_MESSAGE);
-                        }
-                    });
-
-                    // 메뉴 보이기
-                    friendPopupMenu.show(list_friend, e.getPoint().x, e.getPoint().y);
-                }
-                // 왼쪽 클릭
-                else if(SwingUtilities.isLeftMouseButton(e)) {
-                    // 더블 클릭이면
-                    if(e.getClickCount() == 2) {
-                        // 온라인 체크
-                        if(friendObject.getOnline()) {
-                            int chatOption = JOptionPane.showConfirmDialog(getContentPane(),
-                                    friendObject.getUserNick() + "님께 채팅을 요청할까요?", "채팅",
-                                    JOptionPane.YES_NO_OPTION,
-                                    JOptionPane.QUESTION_MESSAGE);
-
-                            if (chatOption == JOptionPane.YES_OPTION) {
+                        requestChatItem.addActionListener(rce -> {
+                            if (friendObject.getOnline()) {
                                 // 채팅 연결
+                            } else {
+                                JOptionPane.showMessageDialog(
+                                        FriendForm.this,
+                                        friendObject.getUserNick() + "님은 오프라인 상태입니다.",
+                                        "알림",
+                                        JOptionPane.INFORMATION_MESSAGE);
+                            }
+                        });
+
+                        // 메뉴 보이기
+                        friendPopupMenu.show(list_onlinefriend, e.getPoint().x, e.getPoint().y);
+                    }
+                    // 왼쪽 클릭
+                    else if (SwingUtilities.isLeftMouseButton(e)) {
+                        // 더블 클릭이면
+                        if (e.getClickCount() == 2) {
+                            // 온라인 체크
+                            if (friendObject.getOnline()) {
+                                int chatOption = JOptionPane.showConfirmDialog(getContentPane(),
+                                        friendObject.getUserNick() + "님께 채팅을 요청할까요?", "채팅",
+                                        JOptionPane.YES_NO_OPTION,
+                                        JOptionPane.QUESTION_MESSAGE);
+
+                                if (chatOption == JOptionPane.YES_OPTION) {
+                                    // 채팅 연결
+                                }
+                            } else {
+                                JOptionPane.showMessageDialog(
+                                        FriendForm.this,
+                                        friendObject.getUserNick() + "님은 오프라인 상태입니다.",
+                                        "알림",
+                                        JOptionPane.INFORMATION_MESSAGE);
                             }
                         }
-                        else {
-                            JOptionPane.showMessageDialog(
-                                    FriendForm.this,
-                                    friendObject.getUserNick() + "님은 오프라인 상태입니다.",
-                                    "알림",
-                                    JOptionPane.INFORMATION_MESSAGE);
-                        }
+                    }
+                }
+            }
+        });
+
+        list_offlinefriend.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                if(offlineFriendListModel.getSize() > 0) {
+                    list_offlinefriend.setSelectedIndex(list_offlinefriend.locationToIndex(e.getPoint()));
+
+                    // 친구 객체
+                    User friendObject = list_offlinefriend.getSelectedValue();
+
+                    // 오른쪽 클릭
+                    if (SwingUtilities.isRightMouseButton(e)) {
+                        // 팝업 메뉴 설정
+                        JPopupMenu friendPopupMenu = new JPopupMenu();
+
+                        // 메뉴 아이템
+                        JMenuItem detailInfoItem = new JMenuItem("상세 정보");
+                        JMenuItem removeFriendItem = new JMenuItem("친구 삭제");
+
+                        // 메뉴 아이템 추가
+                        friendPopupMenu.add(detailInfoItem);
+                        friendPopupMenu.add(removeFriendItem);
+
+                        // 메뉴 보이기
+                        friendPopupMenu.show(list_offlinefriend, e.getPoint().x, e.getPoint().y);
+                    }
+                    // 왼쪽 클릭
+                    else if (SwingUtilities.isLeftMouseButton(e)) {
+                        // 오프라인 유저는 상세정보를 왼쪽클릭에
                     }
                 }
             }
@@ -210,13 +250,25 @@ public class FriendForm extends BaseForm {
                             User friendInfo = new User(friendObject.get("userID").getAsString(), friendObject.get("userNick").getAsString(), friendObject.get("userMsg").getAsString(), friendObject.get("isOnline").getAsBoolean());
 
                             // 친구 목록에 추가
-                            friendListModel.add(friendInfo);
+                            if(friendInfo.getOnline()) {
+                                onlineFriendListModel.add(friendInfo);
+                            }
+                            else {
+                                offlineFriendListModel.add(friendInfo);
+                            }
                         }
-
-                        myUserInfo = new User(authToken, jsonObject.get("id").getAsString(), jsonObject.get("nick").getAsString(), jsonObject.get("userMsg").getAsString(), null);
+                        String userBday = jsonObject.get("userBirthday").getAsString();
+                        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+                        myUserInfo = new User(authToken, jsonObject.get("id").getAsString(),
+                                jsonObject.get("nick").getAsString(),
+                                jsonObject.get("userMsg").getAsString(),
+                                jsonObject.get("userEmail").getAsString(),
+                                simpleDateFormat.parse(userBday),
+                                null);
                         lb_nickname.setText(myUserInfo.getUserNick());
 
                         addFriendForm = new AddFriendForm(socket, myUserInfo);
+                        settingForm = new SettingForm(socket, myUserInfo);
 
                         if(!myUserInfo.getUserMsg().isEmpty()) lb_statusmsg.setText(myUserInfo.getUserMsg());
                         else lb_statusmsg.setText("상태메시지가 없습니다.");
@@ -279,17 +331,23 @@ public class FriendForm extends BaseForm {
      * @author Minjae Seon
      */
     private void setFriendList() {
-        friendListModel = new FriendListModel();
-        friendListRenderer = new FriendListRenderer();
+        onlineFriendListModel = new FriendListModel();
+        offlineFriendListModel = new FriendListModel();
+
+        onlineFriendListRenderer = new FriendListRenderer();
+        offlineFriendListRenderer = new FriendListRenderer();
 
         // Data Model 설정
-        list_friend.setModel(friendListModel);
+        list_onlinefriend.setModel(onlineFriendListModel);
+        list_offlinefriend.setModel(offlineFriendListModel);
 
         // Renderer 설정
-        list_friend.setCellRenderer(friendListRenderer);
+        list_onlinefriend.setCellRenderer(onlineFriendListRenderer);
+        list_offlinefriend.setCellRenderer(offlineFriendListRenderer);
 
         // VERTICAL하게 Item이 나오도록 함
-        list_friend.setLayoutOrientation(JList.VERTICAL);
+        list_onlinefriend.setLayoutOrientation(JList.VERTICAL);
+        list_offlinefriend.setLayoutOrientation(JList.VERTICAL);
     }
 
     private void logout() {
@@ -380,7 +438,9 @@ public class FriendForm extends BaseForm {
                         // 새로고침 처리
                         case "friendrefresh":
                             if(code == 200) {
-                                friendListModel = new FriendListModel();
+                                onlineFriendListModel = new FriendListModel();
+                                offlineFriendListModel = new FriendListModel();
+
                                 // 친구 목록 추출
                                 JsonArray friendArray = JsonParser.parseString(serverInput.get("friend").getAsString()).getAsJsonArray();
                                 for (JsonElement jsonElement : friendArray) {
@@ -389,12 +449,19 @@ public class FriendForm extends BaseForm {
                                     User friendInfo = new User(friendObject.get("userID").getAsString(), friendObject.get("userNick").getAsString(), friendObject.get("userMsg").getAsString(), friendObject.get("isOnline").getAsBoolean());
 
                                     // 친구 목록에 추가
-                                    friendListModel.add(friendInfo);
+                                    if(friendInfo.getOnline()) {
+                                        onlineFriendListModel.add(friendInfo);
+                                    }
+                                    else {
+                                        offlineFriendListModel.add(friendInfo);
+                                    }
                                 }
 
                                 // 새로고침
-                                list_friend.setModel(friendListModel);
-                                friendListRenderer.updateUI();
+                                list_onlinefriend.setModel(onlineFriendListModel);
+                                list_offlinefriend.setModel(offlineFriendListModel);
+                                onlineFriendListRenderer.updateUI();
+                                offlineFriendListRenderer.updateUI();
                             }
                             else {
                                 JOptionPane.showMessageDialog(
@@ -431,6 +498,43 @@ public class FriendForm extends BaseForm {
                                     friendAnswerMap.put("targetid", userId);
                                 }
                                 out.println(Util.createJSON(305, friendAnswerMap));
+                            }
+                            break;
+
+                        case "infochange":
+                            if(code == 200) {
+                                JOptionPane.showMessageDialog(
+                                        settingForm,
+                                        "정보가 변경되었습니다!",
+                                        "알림",
+                                        JOptionPane.INFORMATION_MESSAGE);
+                                lb_nickname.setText(myUserInfo.getUserNick());
+                                lb_statusmsg.setText(myUserInfo.getUserMsg());
+                            }
+                            else {
+                                JOptionPane.showMessageDialog(
+                                        settingForm,
+                                        "정보 변경에 실패했습니다.",
+                                        "에러",
+                                        JOptionPane.ERROR_MESSAGE);
+                                myUserInfo.setUserNick(lb_nickname.getText());
+                                myUserInfo.setUserMsg(lb_statusmsg.getText());
+                            }
+                            break;
+                        case "passwordchange":
+                            if(code == 200) {
+                                JOptionPane.showMessageDialog(
+                                        FriendForm.this,
+                                        "비밀번호가 변경되었습니다!",
+                                        "알림",
+                                        JOptionPane.INFORMATION_MESSAGE);
+                            }
+                            else {
+                                JOptionPane.showMessageDialog(
+                                        FriendForm.this,
+                                        "비밀번호 변경에 실패했습니다.",
+                                        "에러",
+                                        JOptionPane.ERROR_MESSAGE);
                             }
                             break;
                     }

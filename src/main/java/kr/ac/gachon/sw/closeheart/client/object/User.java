@@ -1,21 +1,26 @@
 package kr.ac.gachon.sw.closeheart.client.object;
 
 import java.util.ArrayList;
+import java.util.Date;
 
 public class User {
     private String userToken;
     private String userID;
     private String userNick;
     private String userMsg;
+    private String userEmail;
+    private Date userBirthday;
     private ArrayList<User> friends;
     private boolean isOnline;
 
     // 토큰 포함 본인 유저 정보
-    public User(String userToken, String userID, String userNick, String userMsg, ArrayList<User> friends) {
+    public User(String userToken, String userID, String userNick, String userMsg, String userEmail, Date userBirthday, ArrayList<User> friends) {
         this.userToken = userToken;
         this.userID = userID;
         this.userNick = userNick;
         this.userMsg = userMsg;
+        this.userEmail = userEmail;
+        this.userBirthday = userBirthday;
         this.friends = friends;
     }
 
@@ -43,10 +48,22 @@ public class User {
         return userMsg;
     }
 
-    public ArrayList<User> getFriends() { return friends; }
+    public String getUserEmail() {
+        return userEmail;
+    }
+
+    public Date getUserBirthday() { return userBirthday; };
 
     public boolean getOnline() {
         return isOnline;
+    }
+
+    public void setUserNick(String userNick) {
+        this.userNick = userNick;
+    }
+
+    public void setUserBirthday(Date userBirthday) {
+        this.userBirthday = userBirthday;
     }
 
     public void setUserMsg(String userMsg) {

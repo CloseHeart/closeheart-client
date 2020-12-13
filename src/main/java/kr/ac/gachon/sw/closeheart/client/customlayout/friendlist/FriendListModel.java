@@ -7,7 +7,7 @@ import javax.swing.event.ListDataListener;
 import java.util.ArrayList;
 
 public class FriendListModel implements ListModel<User> {
-    private static ArrayList<User> friendList;
+    private final ArrayList<User> friendList;
 
     public FriendListModel() {
         friendList = new ArrayList<>();
