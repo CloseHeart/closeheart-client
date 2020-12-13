@@ -15,6 +15,7 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.text.SimpleDateFormat;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Scanner;
@@ -104,12 +105,14 @@ public class RegisterForm extends BaseForm {
                    if(isCheckEmail) {
                        // 닉네임 중복확인을 했는지 체크
                        if(isCheckNick) {
+                           DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
                            HashMap<String, String> registerHashMap = new HashMap<>();
                            registerHashMap.put("id", tf_id.getText());
                            registerHashMap.put("pw", Util.encryptSHA512(String.valueOf(tf_password.getPassword())));
                            registerHashMap.put("email", tf_email.getText());
                            registerHashMap.put("nick", tf_nickname.getText());
-                           registerHashMap.put("birthday", new SimpleDateFormat("yyyy-MM-dd").format(dp_birthday.getDate()));
+                           registerHashMap.put("birthday", dp_birthday.getDate().format(dateTimeFormatter));
 
                            String registerJSON = Util.createJSON(104, registerHashMap);
                            serverOutput.println(registerJSON);
