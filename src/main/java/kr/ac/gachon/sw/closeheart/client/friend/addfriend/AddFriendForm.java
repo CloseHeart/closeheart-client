@@ -54,7 +54,7 @@ public class AddFriendForm extends BaseForm {
                         PrintWriter output = new PrintWriter(new OutputStreamWriter(friendServerSocket.getOutputStream()), true);
 
                         // 친구 요청 JSON 생성
-                        HashMap<String, String> requestFriendMap = new HashMap<>();
+                        HashMap<String, Object> requestFriendMap = new HashMap<>();
                         requestFriendMap.put("token", user.getUserToken());
                         requestFriendMap.put("requestID", tf_requestID.getText());
                         String requestFriendJSON = Util.createJSON(302, requestFriendMap);

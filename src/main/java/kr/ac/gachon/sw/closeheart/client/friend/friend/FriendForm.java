@@ -19,6 +19,7 @@ import java.awt.event.*;
 import java.io.*;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 
@@ -41,6 +42,8 @@ public class FriendForm extends BaseForm {
     private String authToken;
     private User myUserInfo;
     private FriendFormThread thread;
+
+    private AddFriendForm addFriendForm;
 
     public FriendForm(Socket socket, String authToken) {
         this.socket = socket;
@@ -80,12 +83,11 @@ public class FriendForm extends BaseForm {
             serverOutput.println(Util.createSingleKeyValueJSON(304, "token", authToken));
         });
 
-        // 친구추가 버튼 액션
-        AddFriendForm addFriendForm = new AddFriendForm(socket, myUserInfo);
+        // 친구 추가 버튼 액션
         btn_addfriend.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                addFriendForm.setVisible(true);
+                if(addFriendForm != null) addFriendForm.setVisible(true);
             }
         });
 
@@ -213,6 +215,8 @@ public class FriendForm extends BaseForm {
 
                         myUserInfo = new User(authToken, jsonObject.get("id").getAsString(), jsonObject.get("nick").getAsString(), jsonObject.get("userMsg").getAsString(), null);
                         lb_nickname.setText(myUserInfo.getUserNick());
+
+                        addFriendForm = new AddFriendForm(socket, myUserInfo);
 
                         if(!myUserInfo.getUserMsg().isEmpty()) lb_statusmsg.setText(myUserInfo.getUserMsg());
                         else lb_statusmsg.setText("상태메시지가 없습니다.");
@@ -373,6 +377,7 @@ public class FriendForm extends BaseForm {
                                 lb_covid19.setText("Welcome to CloseHeart!");
                             }
                             break;
+                        // 새로고침 처리
                         case "friendrefresh":
                             if(code == 200) {
                                 friendListModel = new FriendListModel();
@@ -398,6 +403,36 @@ public class FriendForm extends BaseForm {
                                         "에러",
                                         JOptionPane.ERROR_MESSAGE);
                             }
+                            break;
+                        // 받은 친구 요청 처리
+                        case "friendreceive":
+                            if(code == 200) {
+                                HashMap<String, Object> friendAnswerMap = new HashMap<>();
+                                friendAnswerMap.put("token", myUserInfo.getUserToken());
+                                String userId = serverInput.get("userID").getAsString();
+                                String userNick = serverInput.get("userNick").getAsString();
+
+                                int receiveOption = JOptionPane.showConfirmDialog(getContentPane(),
+                                        userNick + "(" + userId + ") 님이 친구 요청을 보냈습니다.\n수락하시겠습니까?",
+                                        "친구 요청",
+                                        JOptionPane.YES_NO_OPTION,
+                                        JOptionPane.QUESTION_MESSAGE);
+
+                                if (receiveOption == JOptionPane.YES_OPTION) {
+                                    friendAnswerMap.put("msg", "ok");
+                                    friendAnswerMap.put("id", myUserInfo.getUserID());
+                                    friendAnswerMap.put("targetid", userId);
+                                    // 친구 목록 새로고침
+                                    serverOutput.println(Util.createSingleKeyValueJSON(304, "token", authToken));
+                                }
+                                else {
+                                    friendAnswerMap.put("msg", "no");
+                                    friendAnswerMap.put("id", myUserInfo.getUserID());
+                                    friendAnswerMap.put("targetid", userId);
+                                }
+                                out.println(Util.createJSON(305, friendAnswerMap));
+                            }
+                            break;
                     }
 
                     // 로그아웃 코드

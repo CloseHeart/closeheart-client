@@ -107,7 +107,7 @@ public class RegisterForm extends BaseForm {
                        if(isCheckNick) {
                            DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-                           HashMap<String, String> registerHashMap = new HashMap<>();
+                           HashMap<String, Object> registerHashMap = new HashMap<>();
                            registerHashMap.put("id", tf_id.getText());
                            registerHashMap.put("pw", Util.encryptSHA512(String.valueOf(tf_password.getPassword())));
                            registerHashMap.put("email", tf_email.getText());

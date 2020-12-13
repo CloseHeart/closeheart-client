@@ -164,7 +164,7 @@ public class LoginForm extends BaseForm {
             // 서버 연결이 잘 되어있다면
             if (loginServerSocket.isConnected()) {
                 // 아이디와 비밀번호 (암호화)를 서버에 전송
-                HashMap<String, String> loginInfo = new HashMap<>();
+                HashMap<String, Object> loginInfo = new HashMap<>();
                 loginInfo.put("id", id);
                 loginInfo.put("pw", Util.encryptSHA512(password));
 
