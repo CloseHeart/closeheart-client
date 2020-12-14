@@ -20,6 +20,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
 import java.net.Socket;
+import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -265,11 +266,19 @@ public class FriendForm extends BaseForm {
 
                         // 친구 목록 추출
                         ArrayList<User> friendList = new ArrayList<>();
+                        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
                         JsonArray friendArray = JsonParser.parseString(jsonObject.get("friend").getAsString()).getAsJsonArray();
                         for(JsonElement jsonElement : friendArray) {
                             JsonObject friendObject = JsonParser.parseString(jsonElement.getAsString()).getAsJsonObject();
                             // 친구 객체 생성
-                            User friendInfo = new User(friendObject.get("userID").getAsString(), friendObject.get("userNick").getAsString(), friendObject.get("userMsg").getAsString(), friendObject.get("isOnline").getAsBoolean());
+                            User friendInfo = new User(
+                                    friendObject.get("userID").getAsString(),
+                                    friendObject.get("userNick").getAsString(),
+                                    friendObject.get("userMsg").getAsString(),
+                                    friendObject.get("userEmail").getAsString(),
+                                    simpleDateFormat.parse(friendObject.get("userBirthday").getAsString()),
+                                    new Timestamp(friendObject.get("userLastTime").getAsLong()),
+                                    friendObject.get("isOnline").getAsBoolean());
 
                             // 친구 목록에 추가
                             friendList.add(friendInfo);
@@ -281,7 +290,6 @@ public class FriendForm extends BaseForm {
                             }
                         }
                         String userBday = jsonObject.get("userBirthday").getAsString();
-                        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
                         myUserInfo = new User(authToken,
                                 jsonObject.get("id").getAsString(),
                                 jsonObject.get("nick").getAsString(),
@@ -466,11 +474,19 @@ public class FriendForm extends BaseForm {
                                     offlineFriendListModel = new FriendListModel();
 
                                     // 친구 목록 추출
+                                    SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
                                     JsonArray friendArray = JsonParser.parseString(jsonObject.get("friend").getAsString()).getAsJsonArray();
                                     for (JsonElement jsonElement : friendArray) {
-                                        JsonObject friendObject = JsonParser.parseString(jsonElement.getAsString()).getAsJsonObject();
+                                        JsonObject friendObject = jsonElement.getAsJsonObject();
                                         // 친구 객체 생성
-                                        User friendInfo = new User(friendObject.get("userID").getAsString(), friendObject.get("userNick").getAsString(), friendObject.get("userMsg").getAsString(), friendObject.get("isOnline").getAsBoolean());
+                                        User friendInfo = new User(
+                                                friendObject.get("userID").getAsString(),
+                                                friendObject.get("userNick").getAsString(),
+                                                friendObject.get("userMsg").getAsString(),
+                                                friendObject.get("userEmail").getAsString(),
+                                                simpleDateFormat.parse(friendObject.get("userBirthday").getAsString()),
+                                                new Timestamp(friendObject.get("userLastTime").getAsLong()),
+                                                friendObject.get("isOnline").getAsBoolean());
 
                                         // 친구 목록에 추가
                                         if (friendInfo.getOnline()) {
@@ -578,6 +594,7 @@ public class FriendForm extends BaseForm {
                     System.exit(0);
                 } catch (IllegalStateException e) {
                 } catch (Exception e) {
+                    e.printStackTrace();
                     JOptionPane.showMessageDialog(
                             FriendForm.this,
                             "오류가 발생했습니다.\n오류명 : " + e.getMessage(),
