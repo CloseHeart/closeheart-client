@@ -47,8 +47,8 @@ public class FriendForm extends BaseForm {
     private AddFriendForm addFriendForm;
     private SettingForm settingForm;
 
-    private FriendListModel onlineFriendListModel;
-    private FriendListModel offlineFriendListModel;
+    private DefaultListModel<User> onlineFriendListModel;
+    private DefaultListModel<User> offlineFriendListModel;
 
     private FriendListRenderer onlineFriendListRenderer;
     private FriendListRenderer offlineFriendListRenderer;
@@ -109,6 +109,8 @@ public class FriendForm extends BaseForm {
         btn_logout.addActionListener(e -> {
             logout();
         });
+
+        tf_statusmsg.setHighlighter(null);
 
         this.addWindowListener(new WindowAdapter() {
             @Override
@@ -311,12 +313,15 @@ public class FriendForm extends BaseForm {
                             friendInfoForms.put(friendInfo.getUserID(), new FriendInfoForm(myUserInfo, friendInfo, true, serverOutput));
 
                             if(friendInfo.getOnline()) {
-                                onlineFriendListModel.add(friendInfo);
+                                onlineFriendListModel.addElement(friendInfo);
                             }
                             else {
-                                offlineFriendListModel.add(friendInfo);
+                                offlineFriendListModel.addElement(friendInfo);
                             }
                         }
+
+                        onlineFriendListRenderer.repaint();
+                        offlineFriendListRenderer.repaint();
 
                         String userBday = jsonObject.get("userBirthday").getAsString();
                         myUserInfo = new User(authToken,
@@ -390,8 +395,8 @@ public class FriendForm extends BaseForm {
      * @author Minjae Seon
      */
     private void setFriendList() {
-        onlineFriendListModel = new FriendListModel();
-        offlineFriendListModel = new FriendListModel();
+        onlineFriendListModel = new DefaultListModel<>();
+        offlineFriendListModel = new DefaultListModel<>();
 
         onlineFriendListRenderer = new FriendListRenderer();
         offlineFriendListRenderer = new FriendListRenderer();
@@ -516,13 +521,12 @@ public class FriendForm extends BaseForm {
                             // 새로고침 처리
                             case "friendrefresh":
                                 if (code == 200) {
-                                    onlineFriendListModel = new FriendListModel();
-                                    offlineFriendListModel = new FriendListModel();
-
                                     // 친구 목록 추출
                                     SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
                                     JsonArray friendArray = JsonParser.parseString(jsonObject.get("friend").getAsString()).getAsJsonArray();
                                     friendInfoForms.clear();
+                                    onlineFriendListModel.clear();
+                                    offlineFriendListModel.clear();
                                     for (JsonElement jsonElement : friendArray) {
                                         JsonObject friendObject = jsonElement.getAsJsonObject();
                                         // 친구 객체 생성
@@ -539,17 +543,15 @@ public class FriendForm extends BaseForm {
 
                                         // 친구 목록에 추가
                                         if (friendInfo.getOnline()) {
-                                            onlineFriendListModel.add(friendInfo);
+                                            onlineFriendListModel.addElement(friendInfo);
                                         } else {
-                                            offlineFriendListModel.add(friendInfo);
+                                            offlineFriendListModel.addElement(friendInfo);
                                         }
                                     }
 
                                     // 새로고침
-                                    list_onlinefriend.setModel(onlineFriendListModel);
-                                    list_offlinefriend.setModel(offlineFriendListModel);
-                                    onlineFriendListRenderer.updateUI();
-                                    offlineFriendListRenderer.updateUI();
+                                    onlineFriendListRenderer.repaint();
+                                    offlineFriendListRenderer.repaint();
                                 }
                                 break;
                             // 받은 친구 요청 처리
