@@ -50,7 +50,7 @@ public class FriendInfoForm extends BaseForm {
 
     private void setUserInfo() {
         SimpleDateFormat bdayFormat = new SimpleDateFormat("yyyy-MM-dd");
-        SimpleDateFormat lastTimeFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+        SimpleDateFormat lastTimeFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         lb_nick.setText(friendUser.getUserNick());
         lb_id.setText(friendUser.getUserID());
         lb_email.setText(friendUser.getUserEmail());

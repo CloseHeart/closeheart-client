@@ -4,6 +4,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.sun.org.apache.xpath.internal.axes.HasPositionalPredChecker;
 import kr.ac.gachon.sw.closeheart.client.base.BaseForm;
 import kr.ac.gachon.sw.closeheart.client.chat.chat.ChatForm;
 import kr.ac.gachon.sw.closeheart.client.customlayout.friendlist.FriendListModel;
@@ -141,8 +142,7 @@ public class FriendForm extends BaseForm {
 
                         requestChatItem.addActionListener(rce -> {
                             if (friendObject.getOnline()) {
-                                // 채팅 연결
-                                new ChatForm(socket.getInetAddress().getHostAddress(), 21327, myUserInfo, "test");
+                                requestChat(friendObject.getUserID());
                             } else {
                                 JOptionPane.showMessageDialog(
                                         FriendForm.this,
@@ -179,7 +179,7 @@ public class FriendForm extends BaseForm {
                                         JOptionPane.QUESTION_MESSAGE);
 
                                 if (chatOption == JOptionPane.YES_OPTION) {
-                                    // 채팅 연결
+                                    requestChat(friendObject.getUserID());
                                 }
                             } else {
                                 JOptionPane.showMessageDialog(
@@ -415,6 +415,13 @@ public class FriendForm extends BaseForm {
         }
     }
 
+    private void requestChat(String userID) {
+        HashMap<String, Object> chatRequestMap = new HashMap<>();
+        chatRequestMap.put("token", myUserInfo.getUserToken());
+        chatRequestMap.put("inviteID", userID);
+        serverOutput.println(Util.createJSON(309, chatRequestMap));
+    }
+
     class FriendFormThread extends Thread {
         private Scanner in;
         private PrintWriter out;
@@ -616,6 +623,84 @@ public class FriendForm extends BaseForm {
                                             "에러",
                                             JOptionPane.ERROR_MESSAGE);
                                 }
+                                break;
+                            case "sendchatinvite":
+                                if(code == 200) {
+                                    JOptionPane.showMessageDialog(
+                                            FriendForm.this,
+                                            "초대가 전송되었습니다!",
+                                            "알림",
+                                            JOptionPane.INFORMATION_MESSAGE);
+                                }
+                                else {
+                                    JOptionPane.showMessageDialog(
+                                            FriendForm.this,
+                                            "초대한 상대가 오프라인 상태입니다.",
+                                            "알림",
+                                            JOptionPane.INFORMATION_MESSAGE);
+                                }
+                                break;
+                            case "chatinviteresult":
+                                if (code == 200) {
+                                    int chatServerPort = jsonObject.get("serverPort").getAsInt();
+                                    String roomNumber = jsonObject.get("roomNumber").getAsString();
+                                    new ChatForm(socket.getInetAddress().getHostAddress(), chatServerPort, myUserInfo, roomNumber);
+                                }
+                                else if(code == 403) {
+                                    String targetUserNick = jsonObject.get("targetUserNick").getAsString();
+                                    JOptionPane.showMessageDialog(
+                                            FriendForm.this,
+                                            targetUserNick + "님이 채팅을 거절하셨습니다.",
+                                            "알림",
+                                            JOptionPane.INFORMATION_MESSAGE);
+                                }
+                                else {
+                                    JOptionPane.showMessageDialog(
+                                            FriendForm.this,
+                                            "채팅 초대에 실패했습니다.",
+                                            "에러",
+                                            JOptionPane.ERROR_MESSAGE);
+                                }
+                                break;
+                            case "receivechatinvite":
+                                if (code == 200) {
+                                    String inviteUserID = jsonObject.get("inviteUserID").getAsString();
+                                    String inviteUserNick = jsonObject.get("inviteUserNick").getAsString();
+
+                                    HashMap<String, Object> chatInviteAnswerMap = new HashMap<>();
+                                    chatInviteAnswerMap.put("token", myUserInfo.getUserToken());
+                                    chatInviteAnswerMap.put("inviteUserID", inviteUserID);
+
+                                    int receiveOption = JOptionPane.showConfirmDialog(getContentPane(),
+                                            inviteUserNick + " ( " + inviteUserID + ") 님이 채팅 요청을 보냈습니다.\n수락하시겠습니까?",
+                                            "채팅 요청",
+                                            JOptionPane.YES_NO_OPTION,
+                                            JOptionPane.QUESTION_MESSAGE);
+
+                                    if (receiveOption == JOptionPane.YES_OPTION) {
+                                        chatInviteAnswerMap.put("chatinvite", "accept");
+                                        out.println(Util.createJSON(310, chatInviteAnswerMap));
+                                    } else {
+                                        chatInviteAnswerMap.put("chatinvite", "decline");
+                                        out.println(Util.createJSON(310, chatInviteAnswerMap));
+                                    }
+                                }
+                                break;
+                            case "enterchat": {
+                                if (code == 200) {
+                                    int chatServerPort = jsonObject.get("serverPort").getAsInt();
+                                    String roomNumber = jsonObject.get("roomNumber").getAsString();
+                                    new ChatForm(socket.getInetAddress().getHostAddress(), chatServerPort, myUserInfo, roomNumber);
+                                }
+                                else {
+                                    JOptionPane.showMessageDialog(
+                                            FriendForm.this,
+                                            "채팅 정보를 받아오는데 오류가 발생했습니다.",
+                                            "에러",
+                                            JOptionPane.ERROR_MESSAGE);
+                                }
+                            }
+
                         }
 
                         // 로그아웃 코드
