@@ -16,7 +16,7 @@ public class User {
     private boolean isOnline;
 
     // 토큰 포함 본인 유저 정보
-    public User(String userToken, String userID, String userNick, String userMsg, String userEmail, Date userBirthday, Timestamp userLasttime, ArrayList<User> friends) {
+    public User(String userToken, String userID, String userNick, String userMsg, String userEmail, Date userBirthday, ArrayList<User> friends) {
         this.userToken = userToken;
         this.userID = userID;
         this.userNick = userNick;
@@ -24,7 +24,6 @@ public class User {
         this.userEmail = userEmail;
         this.userBirthday = userBirthday;
         this.friends = friends;
-        this.userLasttime = userLasttime;
     }
 
     // 친구에 담을 유저 정보
@@ -38,7 +37,7 @@ public class User {
         this.isOnline = isOnline;
         this.userEmail = userEmail;
         this.userBirthday = userBirthday;
-        this.userLasttime = userLasttime;
+        this.userLastTime = userLastTime;
     }
 
     public String getUserToken() {
@@ -70,8 +69,6 @@ public class User {
     }
 
     public ArrayList<User> getFriends() { return friends; }
-
-    public Timestamp getUserLasttime(){ return userLasttime;}
 
     public boolean getOnline() {
         return isOnline;
