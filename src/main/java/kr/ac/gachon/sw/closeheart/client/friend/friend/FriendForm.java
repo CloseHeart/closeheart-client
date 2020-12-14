@@ -314,7 +314,7 @@ public class FriendForm extends BaseForm {
                                 offlineFriendListModel.add(friendInfo);
                             }
                         }
-                      
+
                         String userBday = jsonObject.get("userBirthday").getAsString();
                         myUserInfo = new User(authToken,
                                 jsonObject.get("id").getAsString(),
@@ -322,7 +322,6 @@ public class FriendForm extends BaseForm {
                                 jsonObject.get("userMsg").getAsString(),
                                 jsonObject.get("userEmail").getAsString(),
                                 simpleDateFormat.parse(userBday),
-                                userLasttime,
                                 friendList);
 
                         lb_nickname.setText(myUserInfo.getUserNick());
