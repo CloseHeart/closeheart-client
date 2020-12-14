@@ -11,7 +11,7 @@ public class User {
     private String userMsg;
     private String userEmail;
     private Date userBirthday;
-    private Timestamp userLasttime;
+    private Timestamp userLastTime;
     private ArrayList<User> friends;
     private boolean isOnline;
 
@@ -28,10 +28,13 @@ public class User {
     }
 
     // 친구에 담을 유저 정보
-    public User(String userID, String userNick, String userMsg, String userEmail, Date userBirthday, Timestamp userLasttime, boolean isOnline) {
+    public User(String userID, String userNick, String userMsg, String userEmail, Date userBirthday, Timestamp userLastTime, boolean isOnline) {
         this.userID = userID;
         this.userNick = userNick;
         this.userMsg = userMsg;
+        this.userEmail = userEmail;
+        this.userBirthday = userBirthday;
+        this.userLastTime = userLastTime;
         this.isOnline = isOnline;
         this.userEmail = userEmail;
         this.userBirthday = userBirthday;
@@ -58,7 +61,15 @@ public class User {
         return userEmail;
     }
 
-    public Date getUserBirthday() { return userBirthday; };
+    public Date getUserBirthday() {
+        return userBirthday;
+    }
+
+    public Timestamp getUserLastTime() {
+        return userLastTime;
+    }
+
+    public ArrayList<User> getFriends() { return friends; }
 
     public Timestamp getUserLasttime(){ return userLasttime;}
 
@@ -77,8 +88,11 @@ public class User {
     public void setUserMsg(String userMsg) {
         this.userMsg = userMsg;
     }
-
+    // 친구 유저 객체 정보를 현재 본인 유저의 친구 ArrayList에 추가
     public void setFriends(User friend) {
+        if(friends == null) {
+            friends = new ArrayList<>();
+        }
         friends.add(friend);
     }
 

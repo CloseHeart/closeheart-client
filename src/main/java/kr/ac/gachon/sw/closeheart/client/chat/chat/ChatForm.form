@@ -40,7 +40,9 @@
                 <constraints>
                   <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
                 </constraints>
-                <properties/>
+                <properties>
+                  <autoscrolls value="false"/>
+                </properties>
                 <border type="none"/>
                 <children>
                   <component id="2ebb4" class="javax.swing.JTextArea" binding="tf_message">
@@ -59,13 +61,18 @@
             <constraints>
               <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
             </constraints>
-            <properties/>
+            <properties>
+              <autoscrolls value="true"/>
+            </properties>
             <border type="none"/>
             <children>
               <component id="f7493" class="javax.swing.JList" binding="list_chat">
                 <constraints/>
                 <properties>
-                  <foreground color="-10580293"/>
+                  <background color="-5060647"/>
+                  <foreground color="-5060647"/>
+                  <selectionBackground color="-5060647"/>
+                  <selectionForeground color="-5060647"/>
                 </properties>
               </component>
             </children>
@@ -82,7 +89,7 @@
           <size top="10" left="10" bottom="10" right="10"/>
         </border>
         <children>
-          <component id="55a01" class="javax.swing.JLabel">
+          <component id="55a01" class="javax.swing.JLabel" binding="lb_chatname">
             <constraints>
               <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
             </constraints>

@@ -3,7 +3,6 @@ package kr.ac.gachon.sw.closeheart.client.chat.chat;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import kr.ac.gachon.sw.closeheart.client.base.BaseForm;
-import kr.ac.gachon.sw.closeheart.client.customlayout.chat.ChatModel;
 import kr.ac.gachon.sw.closeheart.client.customlayout.chat.ChatRenderer;
 import kr.ac.gachon.sw.closeheart.client.object.Chat;
 import kr.ac.gachon.sw.closeheart.client.object.User;
@@ -16,7 +15,6 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.Socket;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Scanner;
@@ -27,19 +25,23 @@ public class ChatForm extends BaseForm {
     private JButton btn_exit;
     private JButton btn_send;
     private JTextArea tf_message;
+    private JLabel lb_chatname;
 
     private Socket socket;
     private Scanner in;
     private PrintWriter out;
 
     private User myUser;
-    private ArrayList<User> friendUser;
-    private ArrayList<Chat> chatList;
+    private String roomNumber;
 
-    public ChatForm(Socket socket, User myUser, ArrayList<User>  friendUser) {
-        this.socket = socket;
+    private DefaultListModel<Chat> chatModel;
+    private ChatRenderer chatRenderer;
+
+    private long lastSendTime;
+
+    public ChatForm(String ipAddress, int portNumber, User myUser, String roomNumber) {
         this.myUser = myUser;
-        this.friendUser = friendUser;
+        this.roomNumber = roomNumber;
 
         // ContentPane 설정
         setContentPane(chatForm_Panel);
@@ -49,6 +51,12 @@ public class ChatForm extends BaseForm {
 
         // 각종 Action Event을 설정
         setEvent();
+
+        try {
+            this.socket = new Socket(ipAddress, portNumber);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         setVisible(true);
 
@@ -73,9 +81,27 @@ public class ChatForm extends BaseForm {
             exitChatRoom();
         });
 
+        btn_send.addActionListener(e -> {
+            long tempTime = System.currentTimeMillis();
+            long intervalTime = tempTime - lastSendTime;
+            System.out.println(System.currentTimeMillis() + " / " + intervalTime);
+            if(intervalTime >= 1000) {
+                lastSendTime = System.currentTimeMillis();
+                HashMap<String, Object> sendMsgMap = new HashMap<>();
+                sendMsgMap.put("token", myUser.getUserToken());
+                sendMsgMap.put("msg", tf_message.getText());
+                tf_message.setText("");
+                out.println(Util.createJSON(211, sendMsgMap));
+            }
+            else {
+                chatModel.addElement(new Chat(2, null, "채팅은 1초마다 보낼 수 있습니다!", Calendar.getInstance()));
+                list_chat.ensureIndexIsVisible(chatModel.getSize());
+            }
+        });
     }
 
     private void initialSetting() {
+        lastSendTime = System.currentTimeMillis();
         try {
             in = new Scanner(new InputStreamReader(socket.getInputStream()));
             out = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()), true);
@@ -83,6 +109,7 @@ public class ChatForm extends BaseForm {
             HashMap<String, Object> connectMap = new HashMap<>();
             connectMap.put("token", myUser.getUserToken());
             connectMap.put("nickName", myUser.getUserMsg());
+            connectMap.put("roomNumber", roomNumber);
             out.println(Util.createJSON(210, connectMap));
 
             setChat();
@@ -96,11 +123,8 @@ public class ChatForm extends BaseForm {
 
     // 채팅 설정
     private void setChat() {
-        // Friend List 설정
-        chatList = new ArrayList<>();
-
-        ChatModel chatModel = new ChatModel(chatList);
-        ChatRenderer chatRenderer = new ChatRenderer();
+        chatModel = new DefaultListModel<Chat>();
+        chatRenderer = new ChatRenderer();
 
         // Data Model 설정
         list_chat.setModel(chatModel);
@@ -151,6 +175,7 @@ public class ChatForm extends BaseForm {
                     if(line.isEmpty()) line = in.nextLine();
 
                     JsonObject serverInput = JsonParser.parseString(line).getAsJsonObject();
+                    System.out.println(serverInput);
 
                     String type = serverInput.get("type").getAsString();
                     String user = serverInput.get("user").getAsString();
@@ -159,19 +184,21 @@ public class ChatForm extends BaseForm {
                     switch (type) {
                         case "join":
                             System.out.println(user + " join");
-                            chatList.add(new Chat(2, user, user + "님이 입장하셨습니다.", Calendar.getInstance()));
+                            chatModel.addElement(new Chat(2, user, user + "님이 입장하셨습니다.", Calendar.getInstance()));
                             break;
                         // 메시지 처리
                         case "message":
                             String msg = serverInput.get("msg").getAsString();
-                            chatList.add(new Chat(1, user, msg, Calendar.getInstance()));
+                            if(!user.equals(myUser.getUserNick())) chatModel.addElement(new Chat(1, user, msg, Calendar.getInstance()));
+                            else chatModel.addElement(new Chat(0, user, msg, Calendar.getInstance()));
                             break;
                         // 퇴장 처리
                         case "exit":
                             System.out.println(user + " exit");
-                            chatList.add(new Chat(2, user, user + "님이 퇴장하셨습니다.", Calendar.getInstance()));
+                            chatModel.addElement(new Chat(2, user, user + "님이 퇴장하셨습니다.", Calendar.getInstance()));
                             break;
                     }
+                    list_chat.ensureIndexIsVisible(chatModel.getSize());
                 }
             }
             catch (Exception e) {
