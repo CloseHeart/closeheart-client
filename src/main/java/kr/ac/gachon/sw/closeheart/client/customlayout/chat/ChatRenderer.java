@@ -8,15 +8,7 @@ import java.awt.*;
 public class ChatRenderer extends JPanel implements ListCellRenderer<Chat> {
     JPanel chatPanel = new JPanel();
     JLabel chatSender = new JLabel();
-    JPanel chatMsgPanel = new JPanel() {
-        @Override
-        protected void paintComponent(Graphics g) {
-            super.paintComponent(g);
-            g.setColor(getBackground());
-            g.fillRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 5, 5);
-            g.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 5, 5);
-        }
-    };
+    JPanel chatMsgPanel = new JPanel();
 
     JTextArea chatMessage = new JTextArea();
 
@@ -34,7 +26,7 @@ public class ChatRenderer extends JPanel implements ListCellRenderer<Chat> {
 
     @Override
     public Component getListCellRendererComponent(JList list, Chat value, int index, boolean isSelected, boolean cellHasFocus) {
-        chatMessage.setRows(value.getChatMsg().length() / 20);
+        chatMessage.setRows(value.getChatMsg().length() / 10);
         chatMessage.setColumns(20);
 
         chatMessage.setEditable(false);
@@ -43,7 +35,7 @@ public class ChatRenderer extends JPanel implements ListCellRenderer<Chat> {
 
         // Border Setting
         this.setBorder(new EmptyBorder(5, 5, 5, 5));
-        chatSender.setBorder(new EmptyBorder(5, 1, 1, 5));
+        chatSender.setBorder(new EmptyBorder(5, 5, 5, 5));
         chatMessage.setBorder(new EmptyBorder(5, 5, 5, 5));
 
         // Background Color는 Blue
@@ -51,10 +43,10 @@ public class ChatRenderer extends JPanel implements ListCellRenderer<Chat> {
         chatPanel.setBackground(new Color(178, 199, 217));
 
         // 채팅 전송자 닉네임
-        chatSender.setText(value.getChatOwner());
+        if(value != null) chatSender.setText(value.getChatOwner());
 
         // 채팅 내용
-        chatMessage.setText(value.getChatMsg());
+        if(value != null) chatMessage.setText(value.getChatMsg());
 
         // Chat Type 0 -> 본인 메시지
         // Chat Type 1 -> 타인 메시지
@@ -76,15 +68,13 @@ public class ChatRenderer extends JPanel implements ListCellRenderer<Chat> {
             chatMessage.setBackground(Color.WHITE);
         }
         else {
-            // 가운데
-            this.add(chatPanel, BorderLayout.CENTER);
+            // 왼쪽
+            this.add(chatPanel, BorderLayout.WEST);
 
             // 밝은 회색
             chatMsgPanel.setBackground(Color.LIGHT_GRAY);
             chatMessage.setBackground(Color.LIGHT_GRAY);
-
-            // 제거
-            chatPanel.remove(chatSender);
+            chatSender.setText("");
         }
         // JPanel 반환
         return this;

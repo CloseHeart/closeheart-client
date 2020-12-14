@@ -5,6 +5,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import kr.ac.gachon.sw.closeheart.client.base.BaseForm;
+import kr.ac.gachon.sw.closeheart.client.chat.chat.ChatForm;
 import kr.ac.gachon.sw.closeheart.client.customlayout.friendlist.FriendListModel;
 import kr.ac.gachon.sw.closeheart.client.customlayout.friendlist.FriendListRenderer;
 import kr.ac.gachon.sw.closeheart.client.friend.addfriend.AddFriendForm;
@@ -142,6 +143,7 @@ public class FriendForm extends BaseForm {
                         requestChatItem.addActionListener(rce -> {
                             if (friendObject.getOnline()) {
                                 // 채팅 연결
+                                new ChatForm(socket.getInetAddress().getHostAddress(), 21327, myUserInfo, "test");
                             } else {
                                 JOptionPane.showMessageDialog(
                                         FriendForm.this,
