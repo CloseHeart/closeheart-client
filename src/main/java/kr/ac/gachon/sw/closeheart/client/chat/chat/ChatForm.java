@@ -85,7 +85,7 @@ public class ChatForm extends BaseForm {
             long tempTime = System.currentTimeMillis();
             long intervalTime = tempTime - lastSendTime;
             System.out.println(System.currentTimeMillis() + " / " + intervalTime);
-            if(intervalTime >= 1000) {
+            if(intervalTime >= 2000) {
                 lastSendTime = System.currentTimeMillis();
                 HashMap<String, Object> sendMsgMap = new HashMap<>();
                 sendMsgMap.put("token", myUser.getUserToken());
@@ -94,13 +94,14 @@ public class ChatForm extends BaseForm {
                 out.println(Util.createJSON(211, sendMsgMap));
             }
             else {
-                chatModel.addElement(new Chat(2, null, "채팅은 1초마다 보낼 수 있습니다!", Calendar.getInstance()));
+                chatModel.addElement(new Chat(2, null, "채팅은 2초마다 보낼 수 있습니다!", Calendar.getInstance()));
                 list_chat.ensureIndexIsVisible(chatModel.getSize());
             }
         });
     }
 
     private void initialSetting() {
+        lb_chatname.setText(roomNumber);
         lastSendTime = System.currentTimeMillis();
         try {
             in = new Scanner(new InputStreamReader(socket.getInputStream()));
