@@ -23,6 +23,9 @@ public abstract class BaseForm extends JFrame {
         // 타이틀 설정
         setTitle(Util.getStrFromProperties(getClass(), "program_title"));
 
+
+        setIconImage(Util.resizeImage(new ImageIcon(getClass().getResource("/img/closeheart_logo.png")).getImage(), 32, 32, Image.SCALE_SMOOTH).getImage());
+
         // 위치를 Platform에 따라 조정함
         setLocationByPlatform(true);
 
