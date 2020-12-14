@@ -9,8 +9,7 @@ import kr.ac.gachon.sw.closeheart.client.object.User;
 import kr.ac.gachon.sw.closeheart.client.util.Util;
 
 import javax.swing.*;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.awt.event.*;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
@@ -26,6 +25,7 @@ public class ChatForm extends BaseForm {
     private JButton btn_send;
     private JTextArea tf_message;
     private JLabel lb_chatname;
+    private JScrollPane sp_chatlist;
 
     private Socket socket;
     private Scanner in;
@@ -85,24 +85,25 @@ public class ChatForm extends BaseForm {
             long tempTime = System.currentTimeMillis();
             long intervalTime = tempTime - lastSendTime;
             System.out.println(System.currentTimeMillis() + " / " + intervalTime);
-            if(intervalTime >= 2000) {
+            if(intervalTime >= 800) {
                 lastSendTime = System.currentTimeMillis();
                 HashMap<String, Object> sendMsgMap = new HashMap<>();
                 sendMsgMap.put("token", myUser.getUserToken());
                 sendMsgMap.put("msg", tf_message.getText());
-                tf_message.setText("");
                 out.println(Util.createJSON(211, sendMsgMap));
+                tf_message.setText("");
+                tf_message.setCaretPosition(0);
             }
             else {
-                chatModel.addElement(new Chat(2, null, "채팅은 2초마다 보낼 수 있습니다!", Calendar.getInstance()));
-                list_chat.ensureIndexIsVisible(chatModel.getSize());
+                chatModel.addElement(new Chat(2, null, "너무 빠릅니다. 잠시 후 전송하세요.", Calendar.getInstance()));
+                chatRenderer.repaint();
             }
         });
     }
 
     private void initialSetting() {
         lb_chatname.setText(roomNumber);
-        lastSendTime = System.currentTimeMillis();
+        lastSendTime = 0;
         try {
             in = new Scanner(new InputStreamReader(socket.getInputStream()));
             out = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()), true);
@@ -115,7 +116,7 @@ public class ChatForm extends BaseForm {
 
             setChat();
 
-            Thread thread = new ChatFormThread(socket, in, out);
+            Thread thread = new ChatFormThread(in, out);
             thread.start();
         } catch (Exception e) {
 
@@ -135,6 +136,17 @@ public class ChatForm extends BaseForm {
 
         // VERTICAL하게 Item이 나오도록 함
         list_chat.setLayoutOrientation(JList.VERTICAL);
+
+        tf_message.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                super.keyPressed(e);
+                if(e.getKeyCode() == KeyEvent.VK_ENTER) {
+                    tf_message.setCaretPosition(0);
+                    btn_send.doClick();
+                }
+            }
+        });
     }
 
     private void exitChatRoom() {
@@ -159,12 +171,10 @@ public class ChatForm extends BaseForm {
     }
 
     class ChatFormThread extends Thread {
-        private Socket socket;
         private Scanner in;
         private PrintWriter out;
 
-        public ChatFormThread(Socket socket, Scanner in, PrintWriter out) {
-            this.socket = socket;
+        public ChatFormThread(Scanner in, PrintWriter out) {
             this.in = in;
             this.out = out;
         }
@@ -199,7 +209,17 @@ public class ChatForm extends BaseForm {
                             chatModel.addElement(new Chat(2, user, user + "님이 퇴장하셨습니다.", Calendar.getInstance()));
                             break;
                     }
+
+                    // 새 채팅 적용
                     chatRenderer.repaint();
+
+                    // 자동 스크롤
+                    SwingUtilities.invokeLater(new Runnable() {
+                        @Override
+                        public void run() {
+                            sp_chatlist.getVerticalScrollBar().setValue(sp_chatlist.getVerticalScrollBar().getMaximum());
+                        }
+                    });
                 }
             }
             catch (Exception e) {

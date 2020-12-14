@@ -98,7 +98,7 @@
             <properties>
               <focusable value="true"/>
               <opaque value="false"/>
-              <requestFocusEnabled value="false"/>
+              <requestFocusEnabled value="true"/>
             </properties>
           </component>
         </children>

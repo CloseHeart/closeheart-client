@@ -2,7 +2,6 @@ package kr.ac.gachon.sw.closeheart.client.friend.setting;
 
 import com.github.lgooddatepicker.components.DatePicker;
 import kr.ac.gachon.sw.closeheart.client.base.BaseForm;
-import kr.ac.gachon.sw.closeheart.client.friend.friend.FriendForm;
 import kr.ac.gachon.sw.closeheart.client.object.User;
 import kr.ac.gachon.sw.closeheart.client.util.Util;
 
@@ -12,7 +11,6 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
-import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
@@ -81,7 +79,7 @@ public class SettingForm extends BaseForm {
             }
             else {
                 try {
-                    if (tf_currentpw.getPassword().length <= 8) {
+                    if (tf_currentpw.getPassword().length < 8) {
                         JOptionPane.showMessageDialog(
                                 this,
                                 "정보를 변경하시려면 현재 비밀번호는 필수적으로 입력되어야 합니다.",
@@ -131,7 +129,7 @@ public class SettingForm extends BaseForm {
             String userPassword = Arrays.toString(tf_newpw.getPassword());
             String checkPassword = Arrays.toString(tf_newpw_check.getPassword());
 
-            if(tf_newpw.getPassword().length <= 8) {
+            if(tf_newpw.getPassword().length < 8) {
                 lb_newpw_check_msg.setText("8자 이상의 비밀번호를 입력하세요.");
                 isPasswordCorrect = false;
             }
