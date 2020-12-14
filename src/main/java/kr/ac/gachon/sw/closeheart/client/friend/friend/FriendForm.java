@@ -9,6 +9,7 @@ import kr.ac.gachon.sw.closeheart.client.chat.chat.ChatForm;
 import kr.ac.gachon.sw.closeheart.client.customlayout.friendlist.FriendListModel;
 import kr.ac.gachon.sw.closeheart.client.customlayout.friendlist.FriendListRenderer;
 import kr.ac.gachon.sw.closeheart.client.friend.addfriend.AddFriendForm;
+import kr.ac.gachon.sw.closeheart.client.friend.setting.FriendInfoForm;
 import kr.ac.gachon.sw.closeheart.client.friend.setting.SettingForm;
 import kr.ac.gachon.sw.closeheart.client.login.login.LoginForm;
 import kr.ac.gachon.sw.closeheart.client.object.ConnectionInfo;
@@ -151,32 +152,16 @@ public class FriendForm extends BaseForm {
                             }
                         });
 
-                        detailInfoItem.addActionListener(rce -> {
-                            if (friendObject.getOnline()) {
-                                // 상세 정보 요청
-                            } else {
-                                JOptionPane.showMessageDialog(
-                                        FriendForm.this,
-                                        friendObject.getUserNick() + "님은 오프라인 상태입니다.",
-                                        "알림",
-                                        JOptionPane.INFORMATION_MESSAGE);
-                            }
+                        removeFriendItem.addActionListener(rce -> {
+                            // 친구 삭제 요청
+                            HashMap<String, Object> friendMap = new HashMap<>();
+                            friendMap.put("token", myUserInfo.getUserToken());
+                            friendMap.put("friendid", friendObject.getUserID());
+                            serverOutput.println(Util.createJSON(308, friendMap));
                         });
 
-                        removeFriendItem.addActionListener(rce -> {
-                            if (friendObject.getOnline()) {
-                                // 친구 삭제 요청
-                                HashMap<String, Object> friendMap = new HashMap<>();
-                                friendMap.put("token", myUserInfo.getUserToken());
-                                friendMap.put("friendid", friendObject.getUserID());
-                                serverOutput.println(Util.createJSON(308, friendMap));
-                            } else {
-                                JOptionPane.showMessageDialog(
-                                        FriendForm.this,
-                                        friendObject.getUserNick() + "님은 오프라인 상태입니다.",
-                                        "알림",
-                                        JOptionPane.INFORMATION_MESSAGE);
-                            }
+                        detailInfoItem.addActionListener(ev -> {
+                            new FriendInfoForm(friendObject);
                         });
 
                         // 메뉴 보이기
@@ -231,12 +216,25 @@ public class FriendForm extends BaseForm {
                         friendPopupMenu.add(detailInfoItem);
                         friendPopupMenu.add(removeFriendItem);
 
+                        removeFriendItem.addActionListener(rce -> {
+                            // 친구 삭제 요청
+                            HashMap<String, Object> friendMap = new HashMap<>();
+                            friendMap.put("token", myUserInfo.getUserToken());
+                            friendMap.put("friendid", friendObject.getUserID());
+                            serverOutput.println(Util.createJSON(308, friendMap));
+                        });
+
+                        detailInfoItem.addActionListener(ev -> {
+                            new FriendInfoForm(friendObject);
+                        });
+
                         // 메뉴 보이기
                         friendPopupMenu.show(list_offlinefriend, e.getPoint().x, e.getPoint().y);
                     }
                     // 왼쪽 클릭
                     else if (SwingUtilities.isLeftMouseButton(e)) {
-                        // 오프라인 유저는 상세정보를 왼쪽클릭에
+                        // 오프라인 유저는 상세정보를
+                        new FriendInfoForm(friendObject);
                     }
                 }
             }
