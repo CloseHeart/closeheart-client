@@ -92,7 +92,7 @@ public class RegisterForm extends BaseForm {
         // 회원가입 버튼 Action
         btn_register.addActionListener(e -> {
             // 비밀번호 8자 이상인지 체크
-            if(tf_password.getPassword().length < 8) {
+            if(tf_password.getPassword().length <= 8) {
                 JOptionPane.showMessageDialog(this, "비밀번호는 8자 이상이여야 합니다!", "오류", JOptionPane.ERROR_MESSAGE);
             }
             // 비밀번호 확인이 틀리지 않았는지 체크
@@ -174,7 +174,7 @@ public class RegisterForm extends BaseForm {
             String userPassword = Arrays.toString(tf_password.getPassword());
             String checkPassword = Arrays.toString(tf_pwcheck.getPassword());
 
-            if(tf_password.getPassword().length < 8) {
+            if(tf_password.getPassword().length <= 8) {
                 lb_pwcheckresult.setText("8자 이상의 비밀번호를 입력하세요.");
                 isPasswordCorrect = false;
             }

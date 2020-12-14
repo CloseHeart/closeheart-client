@@ -4,7 +4,6 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.sun.org.apache.xpath.internal.axes.HasPositionalPredChecker;
 import kr.ac.gachon.sw.closeheart.client.base.BaseForm;
 import kr.ac.gachon.sw.closeheart.client.chat.chat.ChatForm;
 import kr.ac.gachon.sw.closeheart.client.customlayout.friendlist.FriendListModel;
@@ -53,6 +52,8 @@ public class FriendForm extends BaseForm {
 
     private FriendListRenderer onlineFriendListRenderer;
     private FriendListRenderer offlineFriendListRenderer;
+
+    private HashMap<String, FriendInfoForm> friendInfoForms;
 
     public FriendForm(Socket socket, String authToken) {
         this.socket = socket;
@@ -161,7 +162,7 @@ public class FriendForm extends BaseForm {
                         });
 
                         detailInfoItem.addActionListener(ev -> {
-                            new FriendInfoForm(friendObject);
+                            friendInfoForms.get(friendObject.getUserID()).setVisible(true);
                         });
 
                         // 메뉴 보이기
@@ -225,7 +226,7 @@ public class FriendForm extends BaseForm {
                         });
 
                         detailInfoItem.addActionListener(ev -> {
-                            new FriendInfoForm(friendObject);
+                            friendInfoForms.get(friendObject.getUserID()).setVisible(true);
                         });
 
                         // 메뉴 보이기
@@ -234,7 +235,7 @@ public class FriendForm extends BaseForm {
                     // 왼쪽 클릭
                     else if (SwingUtilities.isLeftMouseButton(e)) {
                         // 오프라인 유저는 상세정보를
-                        new FriendInfoForm(friendObject);
+                        friendInfoForms.get(friendObject.getUserID()).setVisible(true);
                     }
                 }
             }
@@ -291,6 +292,7 @@ public class FriendForm extends BaseForm {
                         ArrayList<User> friendList = new ArrayList<>();
                         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
                         JsonArray friendArray = JsonParser.parseString(jsonObject.get("friend").getAsString()).getAsJsonArray();
+                        friendInfoForms = new HashMap<>();
                         for(JsonElement jsonElement : friendArray) {
                             JsonObject friendObject = JsonParser.parseString(jsonElement.getAsString()).getAsJsonObject();
                             // 친구 객체 생성
@@ -305,6 +307,9 @@ public class FriendForm extends BaseForm {
 
                             // 친구 목록에 추가
                             friendList.add(friendInfo);
+
+                            friendInfoForms.put(friendInfo.getUserID(), new FriendInfoForm(myUserInfo, friendInfo, true, serverOutput));
+
                             if(friendInfo.getOnline()) {
                                 onlineFriendListModel.add(friendInfo);
                             }
@@ -441,6 +446,16 @@ public class FriendForm extends BaseForm {
 
                         JsonObject jsonObject = JsonParser.parseString(line).getAsJsonObject();
                         int code = jsonObject.get("code").getAsInt();
+
+                        if(code == 500) {
+                            JOptionPane.showMessageDialog(
+                                    FriendForm.this,
+                                    "서버 에러가 발생했습니다. 잠시 후 다시 로그인해주세요.",
+                                    "에러",
+                                    JOptionPane.ERROR_MESSAGE);
+                            System.exit(-1);
+                        }
+
                         String msg = jsonObject.get("msg").getAsString();
                         System.out.println(line);
 
@@ -458,31 +473,31 @@ public class FriendForm extends BaseForm {
                             case "friendrequest":
                                 if (code == 200) {
                                     JOptionPane.showMessageDialog(
-                                            FriendForm.this,
+                                            null,
                                             "친구 요청을 보냈습니다!",
                                             "요청 성공",
                                             JOptionPane.INFORMATION_MESSAGE);
                                 } else if (code == 400) {
                                     JOptionPane.showMessageDialog(
-                                            FriendForm.this,
+                                            null,
                                             "존재하지 않는 ID입니다. ID를 다시 한번 확인해주세요.",
                                             "경고",
                                             JOptionPane.WARNING_MESSAGE);
                                 } else if (code == 401) {
                                     JOptionPane.showMessageDialog(
-                                            FriendForm.this,
+                                            null,
                                             "이미 친구이거나 친구 요청 대기중입니다!",
                                             "경고",
                                             JOptionPane.WARNING_MESSAGE);
                                 } else if (code == 402) {
                                     JOptionPane.showMessageDialog(
-                                            FriendForm.this,
+                                            null,
                                             "스스로에게는 친구 요청을 보낼 수 없습니다!",
                                             "경고",
                                             JOptionPane.WARNING_MESSAGE);
                                 } else {
                                     JOptionPane.showMessageDialog(
-                                            FriendForm.this,
+                                            null,
                                             "서버 오류가 발생했습니다!",
                                             "에러",
                                             JOptionPane.ERROR_MESSAGE);
@@ -507,6 +522,7 @@ public class FriendForm extends BaseForm {
                                     // 친구 목록 추출
                                     SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
                                     JsonArray friendArray = JsonParser.parseString(jsonObject.get("friend").getAsString()).getAsJsonArray();
+                                    friendInfoForms.clear();
                                     for (JsonElement jsonElement : friendArray) {
                                         JsonObject friendObject = jsonElement.getAsJsonObject();
                                         // 친구 객체 생성
@@ -518,6 +534,8 @@ public class FriendForm extends BaseForm {
                                                 simpleDateFormat.parse(friendObject.get("userBirthday").getAsString()),
                                                 new Timestamp(friendObject.get("userLastTime").getAsLong()),
                                                 friendObject.get("isOnline").getAsBoolean());
+
+                                        friendInfoForms.put(friendInfo.getUserID(), new FriendInfoForm(myUserInfo, friendInfo, true, out));
 
                                         // 친구 목록에 추가
                                         if (friendInfo.getOnline()) {
@@ -609,6 +627,7 @@ public class FriendForm extends BaseForm {
                                 }
                                 tf_statusmsg.setEnabled(true);
                                 tf_statusmsg.setEditable(true);
+                                break;
                             case "friendremove":
                                 if(code == 200){
                                     JOptionPane.showMessageDialog(
@@ -616,7 +635,8 @@ public class FriendForm extends BaseForm {
                                             "친구가 삭제되었습니다.",
                                             "알림",
                                             JOptionPane.INFORMATION_MESSAGE);
-                                }else if(code == 500){
+                                }
+                                else if(code == 500) {
                                     JOptionPane.showMessageDialog(
                                             settingForm,
                                             "친구 삭제가 실패했습니다.",
@@ -686,7 +706,7 @@ public class FriendForm extends BaseForm {
                                     }
                                 }
                                 break;
-                            case "enterchat": {
+                            case "enterchat":
                                 if (code == 200) {
                                     int chatServerPort = jsonObject.get("serverPort").getAsInt();
                                     String roomNumber = jsonObject.get("roomNumber").getAsString();
@@ -694,13 +714,59 @@ public class FriendForm extends BaseForm {
                                 }
                                 else {
                                     JOptionPane.showMessageDialog(
-                                            FriendForm.this,
+                                            null,
                                             "채팅 정보를 받아오는데 오류가 발생했습니다.",
                                             "에러",
                                             JOptionPane.ERROR_MESSAGE);
                                 }
-                            }
-
+                                break;
+                            case "userinforesponse":
+                                if(code == 200) {
+                                    SimpleDateFormat bdayDate = new SimpleDateFormat("yyyy-MM-dd");
+                                    String jsonStr = jsonObject.get("friendinfo").getAsString();
+                                    JsonObject userInfo = JsonParser.parseString(jsonStr).getAsJsonObject();
+                                    User requestUser = new User(
+                                            userInfo.get("userID").getAsString(),
+                                            userInfo.get("userNick").getAsString(),
+                                            userInfo.get("userMsg").getAsString(),
+                                            userInfo.get("userEmail").getAsString(),
+                                            bdayDate.parse(userInfo.get("userBirthday").getAsString()),
+                                            new Timestamp(userInfo.get("userLastTime").getAsLong()),
+                                            false);
+                                    new FriendInfoForm(myUserInfo, requestUser, false, out).setVisible(true);
+                                }
+                                else if(code == 400) {
+                                    JOptionPane.showMessageDialog(
+                                            null,
+                                            "존재하지 않는 ID입니다!",
+                                            "에러",
+                                            JOptionPane.ERROR_MESSAGE);
+                                }
+                                break;
+                            case "removeid":
+                                if(code == 200) {
+                                    JOptionPane.showMessageDialog(
+                                            null,
+                                            "회원탈퇴가 완료되었습니다. 이용해주셔서 감사합니다.",
+                                            "알림",
+                                            JOptionPane.INFORMATION_MESSAGE);
+                                    System.exit(0);
+                                }
+                                else if(code == 400) {
+                                    JOptionPane.showMessageDialog(
+                                            null,
+                                            "비밀번호가 틀렸습니다!",
+                                            "에러",
+                                            JOptionPane.ERROR_MESSAGE);
+                                }
+                                else {
+                                    JOptionPane.showMessageDialog(
+                                            null,
+                                            "계정 삭제에 실패했습니다!",
+                                            "에러",
+                                            JOptionPane.ERROR_MESSAGE);
+                                }
+                                break;
                         }
 
                         // 로그아웃 코드
