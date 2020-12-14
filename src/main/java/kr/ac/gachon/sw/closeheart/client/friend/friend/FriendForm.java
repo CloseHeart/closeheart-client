@@ -19,11 +19,9 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
 import java.net.Socket;
+import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.NoSuchElementException;
-import java.util.Scanner;
+import java.util.*;
 
 public class FriendForm extends BaseForm {
     private JPanel friendForm_panel;
@@ -151,6 +149,34 @@ public class FriendForm extends BaseForm {
                             }
                         });
 
+                        detailInfoItem.addActionListener(rce -> {
+                            if (friendObject.getOnline()) {
+                                // 상세 정보 요청
+                            } else {
+                                JOptionPane.showMessageDialog(
+                                        FriendForm.this,
+                                        friendObject.getUserNick() + "님은 오프라인 상태입니다.",
+                                        "알림",
+                                        JOptionPane.INFORMATION_MESSAGE);
+                            }
+                        });
+
+                        removeFriendItem.addActionListener(rce -> {
+                            if (friendObject.getOnline()) {
+                                // 친구 삭제 요청
+                                HashMap<String, Object> friendMap = new HashMap<>();
+                                friendMap.put("token", myUserInfo.getUserToken());
+                                friendMap.put("friendid", friendObject.getUserID());
+                                serverOutput.println(Util.createJSON(308, friendMap));
+                            } else {
+                                JOptionPane.showMessageDialog(
+                                        FriendForm.this,
+                                        friendObject.getUserNick() + "님은 오프라인 상태입니다.",
+                                        "알림",
+                                        JOptionPane.INFORMATION_MESSAGE);
+                            }
+                        });
+
                         // 메뉴 보이기
                         friendPopupMenu.show(list_onlinefriend, e.getPoint().x, e.getPoint().y);
                     }
@@ -267,7 +293,17 @@ public class FriendForm extends BaseForm {
                         for(JsonElement jsonElement : friendArray) {
                             JsonObject friendObject = JsonParser.parseString(jsonElement.getAsString()).getAsJsonObject();
                             // 친구 객체 생성
-                            User friendInfo = new User(friendObject.get("userID").getAsString(), friendObject.get("userNick").getAsString(), friendObject.get("userMsg").getAsString(), friendObject.get("isOnline").getAsBoolean());
+                            SimpleDateFormat bdayFormat = new SimpleDateFormat("yyyy-MM-dd");
+                            Date userBirthday = bdayFormat.parse(friendObject.get("userBirthday").getAsString());
+                            Timestamp userLasttime = Timestamp.valueOf(friendObject.get("userLasttime").getAsString());
+
+                            User friendInfo = new User(friendObject.get("userID").getAsString(),
+                                    friendObject.get("userNick").getAsString(),
+                                    friendObject.get("userMsg").getAsString(),
+                                    friendObject.get("userEmail").getAsString(),
+                                    userBirthday,
+                                    userLasttime,
+                                    friendObject.get("isOnline").getAsBoolean());
 
                             // 친구 목록에 추가
                             friendList.add(friendInfo);
@@ -280,12 +316,14 @@ public class FriendForm extends BaseForm {
                         }
                         String userBday = jsonObject.get("userBirthday").getAsString();
                         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+                        Timestamp userLasttime = Timestamp.valueOf(jsonObject.get("userLasttime").getAsString());
                         myUserInfo = new User(authToken,
                                 jsonObject.get("id").getAsString(),
                                 jsonObject.get("nick").getAsString(),
                                 jsonObject.get("userMsg").getAsString(),
                                 jsonObject.get("userEmail").getAsString(),
                                 simpleDateFormat.parse(userBday),
+                                userLasttime,
                                 friendList);
 
                         lb_nickname.setText(myUserInfo.getUserNick());
@@ -465,10 +503,21 @@ public class FriendForm extends BaseForm {
 
                                     // 친구 목록 추출
                                     JsonArray friendArray = JsonParser.parseString(jsonObject.get("friend").getAsString()).getAsJsonArray();
+
                                     for (JsonElement jsonElement : friendArray) {
                                         JsonObject friendObject = JsonParser.parseString(jsonElement.getAsString()).getAsJsonObject();
+                                        SimpleDateFormat bdayFormat = new SimpleDateFormat("yyyy-MM-dd");
+                                        Date userBirthday = bdayFormat.parse(friendObject.get("userBirthday").getAsString());
+                                        Timestamp userLasttime = Timestamp.valueOf(jsonObject.get("userLasttime").getAsString());
                                         // 친구 객체 생성
-                                        User friendInfo = new User(friendObject.get("userID").getAsString(), friendObject.get("userNick").getAsString(), friendObject.get("userMsg").getAsString(), friendObject.get("isOnline").getAsBoolean());
+                                        User friendInfo = new User(
+                                                friendObject.get("userID").getAsString(),
+                                                friendObject.get("userNick").getAsString(),
+                                                friendObject.get("userMsg").getAsString(),
+                                                friendObject.get("userEmail").getAsString(),
+                                                userBirthday,
+                                                userLasttime,
+                                                friendObject.get("isOnline").getAsBoolean());
 
                                         // 친구 목록에 추가
                                         if (friendInfo.getOnline()) {
@@ -560,6 +609,20 @@ public class FriendForm extends BaseForm {
                                 }
                                 tf_statusmsg.setEnabled(true);
                                 tf_statusmsg.setEditable(true);
+                            case "friendremove":
+                                if(code == 200){
+                                    JOptionPane.showMessageDialog(
+                                            FriendForm.this,
+                                            "친구가 삭제되었습니다.",
+                                            "알림",
+                                            JOptionPane.INFORMATION_MESSAGE);
+                                }else if(code == 500){
+                                    JOptionPane.showMessageDialog(
+                                            settingForm,
+                                            "친구 삭제가 실패했습니다.",
+                                            "에러",
+                                            JOptionPane.ERROR_MESSAGE);
+                                }
                         }
 
                         // 로그아웃 코드
