@@ -199,7 +199,7 @@ public class ChatForm extends BaseForm {
                             chatModel.addElement(new Chat(2, user, user + "님이 퇴장하셨습니다.", Calendar.getInstance()));
                             break;
                     }
-                    list_chat.ensureIndexIsVisible(chatModel.getSize());
+                    chatRenderer.repaint();
                 }
             }
             catch (Exception e) {
