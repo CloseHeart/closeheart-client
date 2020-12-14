@@ -20,6 +20,7 @@ import java.awt.event.*;
 import java.io.*;
 import java.net.Socket;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
@@ -28,13 +29,13 @@ public class FriendForm extends BaseForm {
     private JPanel friendForm_panel;
     private JList<User> list_onlinefriend;
     private JLabel lb_nickname;
-    private JLabel lb_statusmsg;
     private JLabel lb_covid19;
     private JButton btn_addfriend;
     private JButton btn_setting;
     private JButton btn_refresh;
     private JButton btn_logout;
     private JList<User> list_offlinefriend;
+    private JTextField tf_statusmsg;
 
     private Socket socket;
     private Scanner serverInput;
@@ -71,6 +72,9 @@ public class FriendForm extends BaseForm {
         // 닫기 이벤트 설정
         this.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 
+        tf_statusmsg.setBorder(BorderFactory.createEmptyBorder());
+        this.requestFocusInWindow();
+
         setFriendList();
 
         // 쓰레드 시작
@@ -81,7 +85,8 @@ public class FriendForm extends BaseForm {
     public void setEvent() {
         // 설정 버튼 액션
         btn_setting.addActionListener(e -> {
-            if(settingForm != null) settingForm.setVisible(true);
+            settingForm = new SettingForm(socket, myUserInfo);
+            settingForm.setVisible(true);
         });
 
         // 새로고침 버튼 액션
@@ -94,7 +99,8 @@ public class FriendForm extends BaseForm {
         btn_addfriend.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if(addFriendForm != null) addFriendForm.setVisible(true);
+                addFriendForm = new AddFriendForm(socket, myUserInfo);
+                addFriendForm.setVisible(true);
             }
         });
 
@@ -207,6 +213,19 @@ public class FriendForm extends BaseForm {
                 }
             }
         });
+
+        tf_statusmsg.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                super.keyPressed(e);
+                if(e.getKeyCode() == KeyEvent.VK_ENTER) {
+                    HashMap<String, Object> newMsgMap = new HashMap<>();
+                    newMsgMap.put("token", myUserInfo.getUserToken());
+                    newMsgMap.put("newMsg", tf_statusmsg.getText());
+                    serverOutput.println(Util.createJSON(307, newMsgMap));
+                }
+            }
+        });
     }
 
 
@@ -243,6 +262,7 @@ public class FriendForm extends BaseForm {
                         System.out.println(jsonObject.toString());
 
                         // 친구 목록 추출
+                        ArrayList<User> friendList = new ArrayList<>();
                         JsonArray friendArray = JsonParser.parseString(jsonObject.get("friend").getAsString()).getAsJsonArray();
                         for(JsonElement jsonElement : friendArray) {
                             JsonObject friendObject = JsonParser.parseString(jsonElement.getAsString()).getAsJsonObject();
@@ -250,6 +270,7 @@ public class FriendForm extends BaseForm {
                             User friendInfo = new User(friendObject.get("userID").getAsString(), friendObject.get("userNick").getAsString(), friendObject.get("userMsg").getAsString(), friendObject.get("isOnline").getAsBoolean());
 
                             // 친구 목록에 추가
+                            friendList.add(friendInfo);
                             if(friendInfo.getOnline()) {
                                 onlineFriendListModel.add(friendInfo);
                             }
@@ -259,19 +280,18 @@ public class FriendForm extends BaseForm {
                         }
                         String userBday = jsonObject.get("userBirthday").getAsString();
                         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
-                        myUserInfo = new User(authToken, jsonObject.get("id").getAsString(),
+                        myUserInfo = new User(authToken,
+                                jsonObject.get("id").getAsString(),
                                 jsonObject.get("nick").getAsString(),
                                 jsonObject.get("userMsg").getAsString(),
                                 jsonObject.get("userEmail").getAsString(),
                                 simpleDateFormat.parse(userBday),
-                                null);
+                                friendList);
+
                         lb_nickname.setText(myUserInfo.getUserNick());
 
-                        addFriendForm = new AddFriendForm(socket, myUserInfo);
-                        settingForm = new SettingForm(socket, myUserInfo);
-
-                        if(!myUserInfo.getUserMsg().isEmpty()) lb_statusmsg.setText(myUserInfo.getUserMsg());
-                        else lb_statusmsg.setText("상태메시지가 없습니다.");
+                        if(!myUserInfo.getUserMsg().isEmpty()) tf_statusmsg.setText(myUserInfo.getUserMsg());
+                        else tf_statusmsg.setText("상태메시지가 없습니다.");
                     }
                     else if(responseCode == 403) {
                         JOptionPane.showMessageDialog(
@@ -364,6 +384,7 @@ public class FriendForm extends BaseForm {
     class FriendFormThread extends Thread {
         private Scanner in;
         private PrintWriter out;
+        private boolean isRun = true;
 
         public FriendFormThread(Scanner in, PrintWriter out) {
             this.in = in;
@@ -371,193 +392,196 @@ public class FriendForm extends BaseForm {
         }
 
         public void run() {
-            try {
-                while(in.hasNextLine()) {
-                    String line = in.nextLine();
-                    if(line.isEmpty()) line = in.nextLine();
+            if (isRun) {
+                try {
+                    while (in.hasNextLine()) {
+                        String line = in.nextLine();
+                        if (line.isEmpty()) line = in.nextLine();
 
-                    JsonObject serverInput = JsonParser.parseString(line).getAsJsonObject();
-                    int code = serverInput.get("code").getAsInt();
-                    String msg = serverInput.get("msg").getAsString();
-                    System.out.println(line);
+                        JsonObject jsonObject = JsonParser.parseString(line).getAsJsonObject();
+                        int code = jsonObject.get("code").getAsInt();
+                        String msg = jsonObject.get("msg").getAsString();
+                        System.out.println(line);
 
-                    switch (msg) {
-                        // 토큰 유효하지 않은 경우 처리
-                        case "Token Not Valid!":
-                            JOptionPane.showMessageDialog(
-                                    FriendForm.this,
-                                    "자격 증명에 실패했습니다! 다시 로그인해주세요.",
-                                    "에러",
-                                    JOptionPane.ERROR_MESSAGE);
-                            thread.interrupt();
-                            break;
-                        // 친구 요청 처리 (msg에 friendrequest가 들어가있으면)
-                        case "friendrequest":
-                            if (code == 200) {
+                        switch (msg) {
+                            // 토큰 유효하지 않은 경우 처리
+                            case "Token Not Valid!":
                                 JOptionPane.showMessageDialog(
                                         FriendForm.this,
-                                        "친구 요청을 보냈습니다!",
-                                        "요청 성공",
-                                        JOptionPane.INFORMATION_MESSAGE);
-                            } else if (code == 400) {
-                                JOptionPane.showMessageDialog(
-                                        FriendForm.this,
-                                        "존재하지 않는 ID입니다. ID를 다시 한번 확인해주세요.",
-                                        "경고",
-                                        JOptionPane.WARNING_MESSAGE);
-                            } else if (code == 401) {
-                                JOptionPane.showMessageDialog(
-                                        FriendForm.this,
-                                        "이미 친구이거나 친구 요청 대기중입니다!",
-                                        "경고",
-                                        JOptionPane.WARNING_MESSAGE);
-                            } else if (code == 402) {
-                                JOptionPane.showMessageDialog(
-                                        FriendForm.this,
-                                        "스스로에게는 친구 요청을 보낼 수 없습니다!",
-                                        "경고",
-                                        JOptionPane.WARNING_MESSAGE);
-                            } else {
-                                JOptionPane.showMessageDialog(
-                                        FriendForm.this,
-                                        "서버 오류가 발생했습니다!",
+                                        "자격 증명에 실패했습니다! 다시 로그인해주세요.",
                                         "에러",
                                         JOptionPane.ERROR_MESSAGE);
-                            }
-                            break;
-                        // 코로나 API 관련 처리
-                        case "covid19":
-                            if (code == 200) {
-                                String newCnt = serverInput.get("newCnt").getAsString();
-                                String currDecideCnd = serverInput.get("currDecideCnd").getAsString();
-                                lb_covid19.setText("[코로나19] 오늘 추가 확진자 수 : " + newCnt + " / 총 확진자 수 : " + currDecideCnd);
-                            } else if (code == 500) {
-                                lb_covid19.setText("Welcome to CloseHeart!");
-                            }
-                            break;
-                        // 새로고침 처리
-                        case "friendrefresh":
-                            if(code == 200) {
-                                onlineFriendListModel = new FriendListModel();
-                                offlineFriendListModel = new FriendListModel();
+                                thread.interrupt();
+                                break;
+                            // 친구 요청 처리 (msg에 friendrequest가 들어가있으면)
+                            case "friendrequest":
+                                if (code == 200) {
+                                    JOptionPane.showMessageDialog(
+                                            FriendForm.this,
+                                            "친구 요청을 보냈습니다!",
+                                            "요청 성공",
+                                            JOptionPane.INFORMATION_MESSAGE);
+                                } else if (code == 400) {
+                                    JOptionPane.showMessageDialog(
+                                            FriendForm.this,
+                                            "존재하지 않는 ID입니다. ID를 다시 한번 확인해주세요.",
+                                            "경고",
+                                            JOptionPane.WARNING_MESSAGE);
+                                } else if (code == 401) {
+                                    JOptionPane.showMessageDialog(
+                                            FriendForm.this,
+                                            "이미 친구이거나 친구 요청 대기중입니다!",
+                                            "경고",
+                                            JOptionPane.WARNING_MESSAGE);
+                                } else if (code == 402) {
+                                    JOptionPane.showMessageDialog(
+                                            FriendForm.this,
+                                            "스스로에게는 친구 요청을 보낼 수 없습니다!",
+                                            "경고",
+                                            JOptionPane.WARNING_MESSAGE);
+                                } else {
+                                    JOptionPane.showMessageDialog(
+                                            FriendForm.this,
+                                            "서버 오류가 발생했습니다!",
+                                            "에러",
+                                            JOptionPane.ERROR_MESSAGE);
+                                }
+                                break;
+                            // 코로나 API 관련 처리
+                            case "covid19":
+                                if (code == 200) {
+                                    String newCnt = jsonObject.get("newCnt").getAsString();
+                                    String currDecideCnd = jsonObject.get("currDecideCnd").getAsString();
+                                    lb_covid19.setText("[코로나19] 오늘 추가 확진자 수 : " + newCnt + " / 총 확진자 수 : " + currDecideCnd);
+                                } else if (code == 500) {
+                                    lb_covid19.setText("Welcome to CloseHeart!");
+                                }
+                                break;
+                            // 새로고침 처리
+                            case "friendrefresh":
+                                if (code == 200) {
+                                    onlineFriendListModel = new FriendListModel();
+                                    offlineFriendListModel = new FriendListModel();
 
-                                // 친구 목록 추출
-                                JsonArray friendArray = JsonParser.parseString(serverInput.get("friend").getAsString()).getAsJsonArray();
-                                for (JsonElement jsonElement : friendArray) {
-                                    JsonObject friendObject = JsonParser.parseString(jsonElement.getAsString()).getAsJsonObject();
-                                    // 친구 객체 생성
-                                    User friendInfo = new User(friendObject.get("userID").getAsString(), friendObject.get("userNick").getAsString(), friendObject.get("userMsg").getAsString(), friendObject.get("isOnline").getAsBoolean());
+                                    // 친구 목록 추출
+                                    JsonArray friendArray = JsonParser.parseString(jsonObject.get("friend").getAsString()).getAsJsonArray();
+                                    for (JsonElement jsonElement : friendArray) {
+                                        JsonObject friendObject = JsonParser.parseString(jsonElement.getAsString()).getAsJsonObject();
+                                        // 친구 객체 생성
+                                        User friendInfo = new User(friendObject.get("userID").getAsString(), friendObject.get("userNick").getAsString(), friendObject.get("userMsg").getAsString(), friendObject.get("isOnline").getAsBoolean());
 
-                                    // 친구 목록에 추가
-                                    if(friendInfo.getOnline()) {
-                                        onlineFriendListModel.add(friendInfo);
+                                        // 친구 목록에 추가
+                                        if (friendInfo.getOnline()) {
+                                            onlineFriendListModel.add(friendInfo);
+                                        } else {
+                                            offlineFriendListModel.add(friendInfo);
+                                        }
                                     }
-                                    else {
-                                        offlineFriendListModel.add(friendInfo);
+
+                                    // 새로고침
+                                    list_onlinefriend.setModel(onlineFriendListModel);
+                                    list_offlinefriend.setModel(offlineFriendListModel);
+                                    onlineFriendListRenderer.updateUI();
+                                    offlineFriendListRenderer.updateUI();
+                                }
+                                break;
+                            // 받은 친구 요청 처리
+                            case "friendreceive":
+                                if (code == 200) {
+                                    HashMap<String, Object> friendAnswerMap = new HashMap<>();
+                                    friendAnswerMap.put("token", myUserInfo.getUserToken());
+                                    String userId = jsonObject.get("userID").getAsString();
+                                    String userNick = jsonObject.get("userNick").getAsString();
+
+                                    int receiveOption = JOptionPane.showConfirmDialog(getContentPane(),
+                                            userNick + "(" + userId + ") 님이 친구 요청을 보냈습니다.\n수락하시겠습니까?",
+                                            "친구 요청",
+                                            JOptionPane.YES_NO_OPTION,
+                                            JOptionPane.QUESTION_MESSAGE);
+
+                                    if (receiveOption == JOptionPane.YES_OPTION) {
+                                        friendAnswerMap.put("msg", "ok");
+                                        friendAnswerMap.put("id", myUserInfo.getUserID());
+                                        friendAnswerMap.put("targetid", userId);
+                                        // 친구 목록 새로고침
+                                        serverOutput.println(Util.createSingleKeyValueJSON(304, "token", authToken));
+                                    } else {
+                                        friendAnswerMap.put("msg", "no");
+                                        friendAnswerMap.put("id", myUserInfo.getUserID());
+                                        friendAnswerMap.put("targetid", userId);
                                     }
+                                    out.println(Util.createJSON(305, friendAnswerMap));
                                 }
-
-                                // 새로고침
-                                list_onlinefriend.setModel(onlineFriendListModel);
-                                list_offlinefriend.setModel(offlineFriendListModel);
-                                onlineFriendListRenderer.updateUI();
-                                offlineFriendListRenderer.updateUI();
-                            }
-                            else {
-                                JOptionPane.showMessageDialog(
-                                        FriendForm.this,
-                                        "친구 목록 새로고침에 실패했습니다. 잠시 후 다시 시도해주세요.",
-                                        "에러",
-                                        JOptionPane.ERROR_MESSAGE);
-                            }
-                            break;
-                        // 받은 친구 요청 처리
-                        case "friendreceive":
-                            if(code == 200) {
-                                HashMap<String, Object> friendAnswerMap = new HashMap<>();
-                                friendAnswerMap.put("token", myUserInfo.getUserToken());
-                                String userId = serverInput.get("userID").getAsString();
-                                String userNick = serverInput.get("userNick").getAsString();
-
-                                int receiveOption = JOptionPane.showConfirmDialog(getContentPane(),
-                                        userNick + "(" + userId + ") 님이 친구 요청을 보냈습니다.\n수락하시겠습니까?",
-                                        "친구 요청",
-                                        JOptionPane.YES_NO_OPTION,
-                                        JOptionPane.QUESTION_MESSAGE);
-
-                                if (receiveOption == JOptionPane.YES_OPTION) {
-                                    friendAnswerMap.put("msg", "ok");
-                                    friendAnswerMap.put("id", myUserInfo.getUserID());
-                                    friendAnswerMap.put("targetid", userId);
-                                    // 친구 목록 새로고침
-                                    serverOutput.println(Util.createSingleKeyValueJSON(304, "token", authToken));
+                                break;
+                            // 정보 변경
+                            case "infochange":
+                                if (code == 200) {
+                                    for (String key : jsonObject.keySet()) {
+                                        String value = jsonObject.get(key).getAsString();
+                                        if (key.equals("newNick")) {
+                                            myUserInfo.setUserNick(value);
+                                            lb_nickname.setText(myUserInfo.getUserNick());
+                                        }
+                                        if (key.equals("newBday")) {
+                                            SimpleDateFormat bdayFormat = new SimpleDateFormat("yyyy-MM-dd");
+                                            myUserInfo.setUserBirthday(bdayFormat.parse(value));
+                                        }
+                                    }
+                                    JOptionPane.showMessageDialog(
+                                            settingForm,
+                                            "정보가 변경되었습니다!",
+                                            "알림",
+                                            JOptionPane.INFORMATION_MESSAGE);
+                                } else if (code == 403) {
+                                    JOptionPane.showMessageDialog(
+                                            settingForm,
+                                            "현재 비밀번호가 틀립니다.",
+                                            "에러",
+                                            JOptionPane.ERROR_MESSAGE);
+                                } else {
+                                    JOptionPane.showMessageDialog(
+                                            settingForm,
+                                            "정보 변경에 실패했습니다.",
+                                            "에러",
+                                            JOptionPane.ERROR_MESSAGE);
                                 }
-                                else {
-                                    friendAnswerMap.put("msg", "no");
-                                    friendAnswerMap.put("id", myUserInfo.getUserID());
-                                    friendAnswerMap.put("targetid", userId);
+                                settingForm.dispose();
+                                break;
+                            case "setMsg":
+                                if (code == 200) {
+                                    myUserInfo.setUserMsg(tf_statusmsg.getText());
+                                } else {
+                                    JOptionPane.showMessageDialog(
+                                            settingForm,
+                                            "상태메시지 변경에 실패했습니다.",
+                                            "에러",
+                                            JOptionPane.ERROR_MESSAGE);
+                                    tf_statusmsg.setText(myUserInfo.getUserMsg());
                                 }
-                                out.println(Util.createJSON(305, friendAnswerMap));
-                            }
-                            break;
+                                tf_statusmsg.setEnabled(true);
+                                tf_statusmsg.setEditable(true);
+                        }
 
-                        case "infochange":
-                            if(code == 200) {
-                                JOptionPane.showMessageDialog(
-                                        settingForm,
-                                        "정보가 변경되었습니다!",
-                                        "알림",
-                                        JOptionPane.INFORMATION_MESSAGE);
-                                lb_nickname.setText(myUserInfo.getUserNick());
-                                lb_statusmsg.setText(myUserInfo.getUserMsg());
-                            }
-                            else {
-                                JOptionPane.showMessageDialog(
-                                        settingForm,
-                                        "정보 변경에 실패했습니다.",
-                                        "에러",
-                                        JOptionPane.ERROR_MESSAGE);
-                                myUserInfo.setUserNick(lb_nickname.getText());
-                                myUserInfo.setUserMsg(lb_statusmsg.getText());
-                            }
+                        // 로그아웃 코드
+                        if (code == 301) {
                             break;
-                        case "passwordchange":
-                            if(code == 200) {
-                                JOptionPane.showMessageDialog(
-                                        FriendForm.this,
-                                        "비밀번호가 변경되었습니다!",
-                                        "알림",
-                                        JOptionPane.INFORMATION_MESSAGE);
-                            }
-                            else {
-                                JOptionPane.showMessageDialog(
-                                        FriendForm.this,
-                                        "비밀번호 변경에 실패했습니다.",
-                                        "에러",
-                                        JOptionPane.ERROR_MESSAGE);
-                            }
-                            break;
+                        }
                     }
-
-                    // 로그아웃 코드
-                    if(code == 301) {
-                        break;
-                    }
+                } catch (NoSuchElementException e) {
+                    JOptionPane.showMessageDialog(
+                            FriendForm.this,
+                            "서버와 연결이 끊어졌습니다!",
+                            "에러",
+                            JOptionPane.ERROR_MESSAGE);
+                    System.exit(0);
+                } catch (IllegalStateException e) {
+                } catch (Exception e) {
+                    JOptionPane.showMessageDialog(
+                            FriendForm.this,
+                            "오류가 발생했습니다.\n오류명 : " + e.getMessage(),
+                            "에러",
+                            JOptionPane.ERROR_MESSAGE);
                 }
-            } catch (NoSuchElementException e) {
-                JOptionPane.showMessageDialog(
-                        FriendForm.this,
-                        "서버와 연결이 끊어졌습니다!",
-                        "에러",
-                        JOptionPane.ERROR_MESSAGE);
-                System.exit(0);
-            } catch (Exception e) {
-                e.printStackTrace();
-                JOptionPane.showMessageDialog(
-                        FriendForm.this,
-                        "오류가 발생했습니다!\n오류명 : " + e.getMessage(),
-                        "에러",
-                        JOptionPane.ERROR_MESSAGE);
             }
         }
 
@@ -568,6 +592,7 @@ public class FriendForm extends BaseForm {
             // 인터럽트 발생시 로그아웃 요청
             out.println(Util.createSingleKeyValueJSON(301, "token", authToken));
             try {
+                isRun = false;
                 // 통신 관련 다 닫기
                 in.close();
                 out.close();
@@ -577,7 +602,7 @@ public class FriendForm extends BaseForm {
             }
 
             // 종료하고 로그인 폼으로 넘어감
-            FriendForm.this.dispose();
+            if(FriendForm.this.isVisible()) FriendForm.this.dispose();
             ConnectionInfo info = Util.getServerInfo();
             new LoginForm(info);
         }
