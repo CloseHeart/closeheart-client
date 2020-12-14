@@ -22,10 +22,7 @@ import java.io.*;
 import java.net.Socket;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.NoSuchElementException;
-import java.util.Scanner;
+import java.util.*;
 
 public class FriendForm extends BaseForm {
     private JPanel friendForm_panel;
@@ -145,6 +142,34 @@ public class FriendForm extends BaseForm {
                             if (friendObject.getOnline()) {
                                 // 채팅 연결
                                 new ChatForm(socket.getInetAddress().getHostAddress(), 21327, myUserInfo, "test");
+                            } else {
+                                JOptionPane.showMessageDialog(
+                                        FriendForm.this,
+                                        friendObject.getUserNick() + "님은 오프라인 상태입니다.",
+                                        "알림",
+                                        JOptionPane.INFORMATION_MESSAGE);
+                            }
+                        });
+
+                        detailInfoItem.addActionListener(rce -> {
+                            if (friendObject.getOnline()) {
+                                // 상세 정보 요청
+                            } else {
+                                JOptionPane.showMessageDialog(
+                                        FriendForm.this,
+                                        friendObject.getUserNick() + "님은 오프라인 상태입니다.",
+                                        "알림",
+                                        JOptionPane.INFORMATION_MESSAGE);
+                            }
+                        });
+
+                        removeFriendItem.addActionListener(rce -> {
+                            if (friendObject.getOnline()) {
+                                // 친구 삭제 요청
+                                HashMap<String, Object> friendMap = new HashMap<>();
+                                friendMap.put("token", myUserInfo.getUserToken());
+                                friendMap.put("friendid", friendObject.getUserID());
+                                serverOutput.println(Util.createJSON(308, friendMap));
                             } else {
                                 JOptionPane.showMessageDialog(
                                         FriendForm.this,
@@ -289,6 +314,7 @@ public class FriendForm extends BaseForm {
                                 offlineFriendListModel.add(friendInfo);
                             }
                         }
+                      
                         String userBday = jsonObject.get("userBirthday").getAsString();
                         myUserInfo = new User(authToken,
                                 jsonObject.get("id").getAsString(),
@@ -296,6 +322,7 @@ public class FriendForm extends BaseForm {
                                 jsonObject.get("userMsg").getAsString(),
                                 jsonObject.get("userEmail").getAsString(),
                                 simpleDateFormat.parse(userBday),
+                                userLasttime,
                                 friendList);
 
                         lb_nickname.setText(myUserInfo.getUserNick());
@@ -578,6 +605,20 @@ public class FriendForm extends BaseForm {
                                 }
                                 tf_statusmsg.setEnabled(true);
                                 tf_statusmsg.setEditable(true);
+                            case "friendremove":
+                                if(code == 200){
+                                    JOptionPane.showMessageDialog(
+                                            FriendForm.this,
+                                            "친구가 삭제되었습니다.",
+                                            "알림",
+                                            JOptionPane.INFORMATION_MESSAGE);
+                                }else if(code == 500){
+                                    JOptionPane.showMessageDialog(
+                                            settingForm,
+                                            "친구 삭제가 실패했습니다.",
+                                            "에러",
+                                            JOptionPane.ERROR_MESSAGE);
+                                }
                         }
 
                         // 로그아웃 코드
