@@ -2,9 +2,13 @@ package kr.ac.gachon.sw.closeheart.client.friend.setting;
 
 import kr.ac.gachon.sw.closeheart.client.base.BaseForm;
 import kr.ac.gachon.sw.closeheart.client.object.User;
+import kr.ac.gachon.sw.closeheart.client.util.Util;
 
 import javax.swing.*;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
+import java.util.HashMap;
 
 public class FriendInfoForm extends BaseForm {
     private JPanel friendInfoForm_Panel;
@@ -20,10 +24,19 @@ public class FriendInfoForm extends BaseForm {
     private JButton btn_close;
     private JLabel lb_lasttime_label;
     private JLabel lb_lasttime;
+    private JButton btn_friendadd;
 
+    private boolean isFriend;
+    private PrintWriter printWriter;
+
+    private User myUser;
     private User friendUser;
-    public FriendInfoForm(User friendUser) {
+
+    public FriendInfoForm(User myUser, User friendUser, boolean isFriend, PrintWriter printWriter) {
+        this.myUser = myUser;
         this.friendUser = friendUser;
+        this.isFriend = isFriend;
+        this.printWriter = printWriter;
 
         // ContentPane 설정
         setContentPane(friendInfoForm_Panel);
@@ -36,8 +49,6 @@ public class FriendInfoForm extends BaseForm {
 
         setUserInfo();
 
-        this.setVisible(true);
-
         this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
     }
 
@@ -45,6 +56,19 @@ public class FriendInfoForm extends BaseForm {
     public void setEvent() {
         btn_close.addActionListener(e -> {
             this.dispose();
+        });
+
+        btn_friendadd.addActionListener(e -> {
+            if(!isFriend) {
+                // 친구 요청 JSON 생성
+                HashMap<String, Object> requestFriendMap = new HashMap<>();
+                requestFriendMap.put("token", myUser.getUserToken());
+                requestFriendMap.put("requestID", lb_id.getText());
+                String requestFriendJSON = Util.createJSON(302, requestFriendMap);
+
+                // 요청 전송
+                printWriter.println(requestFriendJSON);
+            }
         });
     }
 

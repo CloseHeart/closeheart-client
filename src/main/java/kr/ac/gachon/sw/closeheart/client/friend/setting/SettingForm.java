@@ -37,10 +37,12 @@ public class SettingForm extends BaseForm {
     private JPasswordField tf_newpw_check;
     private JLabel lb_newpw_check_label;
     private JLabel lb_newpw_check_msg;
+    private JButton btn_removeid;
 
     private Socket socket;
     private User user;
     private PrintWriter out;
+    private RemoveForm removeForm;
     private boolean isPasswordCorrect = false;
 
     public SettingForm(Socket socket, User user) {
@@ -79,7 +81,7 @@ public class SettingForm extends BaseForm {
             }
             else {
                 try {
-                    if (tf_currentpw.getPassword().length < 8) {
+                    if (tf_currentpw.getPassword().length <= 8) {
                         JOptionPane.showMessageDialog(
                                 this,
                                 "정보를 변경하시려면 현재 비밀번호는 필수적으로 입력되어야 합니다.",
@@ -129,7 +131,7 @@ public class SettingForm extends BaseForm {
             String userPassword = Arrays.toString(tf_newpw.getPassword());
             String checkPassword = Arrays.toString(tf_newpw_check.getPassword());
 
-            if(tf_newpw.getPassword().length < 8) {
+            if(tf_newpw.getPassword().length <= 8) {
                 lb_newpw_check_msg.setText("8자 이상의 비밀번호를 입력하세요.");
                 isPasswordCorrect = false;
             }
@@ -146,6 +148,13 @@ public class SettingForm extends BaseForm {
         btn_developer.addActionListener(e -> {
             DeveloperForm developerForm = new DeveloperForm();
             developerForm.setVisible(true);
+        });
+
+        btn_removeid.addActionListener(e -> {
+            if(removeForm == null) {
+                removeForm = new RemoveForm(user, out);
+            }
+            removeForm.setVisible(true);
         });
     }
 
