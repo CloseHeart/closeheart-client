@@ -6,10 +6,9 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import kr.ac.gachon.sw.closeheart.client.base.BaseForm;
 import kr.ac.gachon.sw.closeheart.client.chat.chat.ChatForm;
-import kr.ac.gachon.sw.closeheart.client.customlayout.friendlist.FriendListModel;
 import kr.ac.gachon.sw.closeheart.client.customlayout.friendlist.FriendListRenderer;
-import kr.ac.gachon.sw.closeheart.client.friend.addfriend.AddFriendForm;
-import kr.ac.gachon.sw.closeheart.client.friend.setting.FriendInfoForm;
+import kr.ac.gachon.sw.closeheart.client.friend.usersearch.UserSearchForm;
+import kr.ac.gachon.sw.closeheart.client.friend.newchat.NewChatForm;
 import kr.ac.gachon.sw.closeheart.client.friend.setting.SettingForm;
 import kr.ac.gachon.sw.closeheart.client.login.login.LoginForm;
 import kr.ac.gachon.sw.closeheart.client.object.ConnectionInfo;
@@ -36,6 +35,7 @@ public class FriendForm extends BaseForm {
     private JButton btn_logout;
     private JList<User> list_offlinefriend;
     private JTextField tf_statusmsg;
+    private JButton btn_newchat;
 
     private Socket socket;
     private Scanner serverInput;
@@ -44,8 +44,9 @@ public class FriendForm extends BaseForm {
     private User myUserInfo;
     private FriendFormThread thread;
 
-    private AddFriendForm addFriendForm;
+    private UserSearchForm userSearchForm;
     private SettingForm settingForm;
+    private NewChatForm newChatForm;
 
     private DefaultListModel<User> onlineFriendListModel;
     private DefaultListModel<User> offlineFriendListModel;
@@ -98,11 +99,9 @@ public class FriendForm extends BaseForm {
         });
 
         // 친구 추가 버튼 액션
-        btn_addfriend.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                addFriendForm = new AddFriendForm(socket, myUserInfo);
-                addFriendForm.setVisible(true);
+        btn_addfriend.addActionListener(e -> {
+            if(!userSearchForm.isVisible()) {
+                userSearchForm.setVisible(true);
             }
         });
 
@@ -255,6 +254,13 @@ public class FriendForm extends BaseForm {
                 }
             }
         });
+
+        btn_newchat.addActionListener(e -> {
+            if(newChatForm == null) {
+                newChatForm = new NewChatForm(myUserInfo, serverOutput);
+            }
+            newChatForm.setVisible(true);
+        });
     }
 
 
@@ -310,7 +316,7 @@ public class FriendForm extends BaseForm {
                             // 친구 목록에 추가
                             friendList.add(friendInfo);
 
-                            friendInfoForms.put(friendInfo.getUserID(), new FriendInfoForm(myUserInfo, friendInfo, true, serverOutput));
+                            friendInfoForms.put(friendInfo.getUserID(), new FriendInfoForm(myUserInfo, friendInfo, serverOutput));
 
                             if(friendInfo.getOnline()) {
                                 onlineFriendListModel.addElement(friendInfo);
@@ -336,6 +342,8 @@ public class FriendForm extends BaseForm {
 
                         if(!myUserInfo.getUserMsg().isEmpty()) tf_statusmsg.setText(myUserInfo.getUserMsg());
                         else tf_statusmsg.setText("상태메시지가 없습니다.");
+
+                        userSearchForm = new UserSearchForm(serverOutput, myUserInfo);
                     }
                     else if(responseCode == 403) {
                         JOptionPane.showMessageDialog(
@@ -527,6 +535,7 @@ public class FriendForm extends BaseForm {
                                     friendInfoForms.clear();
                                     onlineFriendListModel.clear();
                                     offlineFriendListModel.clear();
+                                    myUserInfo.getFriends().clear();
                                     for (JsonElement jsonElement : friendArray) {
                                         JsonObject friendObject = jsonElement.getAsJsonObject();
                                         // 친구 객체 생성
@@ -539,7 +548,8 @@ public class FriendForm extends BaseForm {
                                                 new Timestamp(friendObject.get("userLastTime").getAsLong()),
                                                 friendObject.get("isOnline").getAsBoolean());
 
-                                        friendInfoForms.put(friendInfo.getUserID(), new FriendInfoForm(myUserInfo, friendInfo, true, out));
+                                        myUserInfo.getFriends().add(friendInfo);
+                                        friendInfoForms.put(friendInfo.getUserID(), new FriendInfoForm(myUserInfo, friendInfo, out));
 
                                         // 친구 목록에 추가
                                         if (friendInfo.getOnline()) {
@@ -724,18 +734,26 @@ public class FriendForm extends BaseForm {
                                 break;
                             case "userinforesponse":
                                 if(code == 200) {
+                                    userSearchForm.clear();
+
                                     SimpleDateFormat bdayDate = new SimpleDateFormat("yyyy-MM-dd");
-                                    String jsonStr = jsonObject.get("friendinfo").getAsString();
-                                    JsonObject userInfo = JsonParser.parseString(jsonStr).getAsJsonObject();
-                                    User requestUser = new User(
-                                            userInfo.get("userID").getAsString(),
-                                            userInfo.get("userNick").getAsString(),
-                                            userInfo.get("userMsg").getAsString(),
-                                            userInfo.get("userEmail").getAsString(),
-                                            bdayDate.parse(userInfo.get("userBirthday").getAsString()),
-                                            new Timestamp(userInfo.get("userLastTime").getAsLong()),
-                                            false);
-                                    new FriendInfoForm(myUserInfo, requestUser, false, out).setVisible(true);
+                                    JsonArray friendArray = JsonParser.parseString(jsonObject.get("userinfo").getAsString()).getAsJsonArray();
+                                    for (JsonElement jsonElement : friendArray) {
+                                        JsonObject friendObject = jsonElement.getAsJsonObject();
+                                        // 친구 객체 생성
+                                        User userInfo = new User(
+                                                friendObject.get("userID").getAsString(),
+                                                friendObject.get("userNick").getAsString(),
+                                                friendObject.get("userMsg").getAsString(),
+                                                friendObject.get("userEmail").getAsString(),
+                                                bdayDate.parse(friendObject.get("userBirthday").getAsString()),
+                                                new Timestamp(friendObject.get("userLastTime").getAsLong()),
+                                                friendObject.get("isOnline").getAsBoolean());
+
+                                        userSearchForm.addElement(userInfo);
+                                    }
+                                    // 새로고침
+                                    userSearchForm.repaint();
                                 }
                                 else if(code == 400) {
                                     JOptionPane.showMessageDialog(
