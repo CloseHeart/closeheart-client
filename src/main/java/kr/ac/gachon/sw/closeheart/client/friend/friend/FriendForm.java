@@ -712,7 +712,7 @@ public class FriendForm extends BaseForm {
                                     chatInviteAnswerMap.put("roomNumber", rNumber);
 
                                     int receiveOption = JOptionPane.showConfirmDialog(getContentPane(),
-                                            inviteUserNick + " ( " + inviteUserID + ") 님이 채팅 요청을 보냈습니다.\n수락하시겠습니까?",
+                                            inviteUserNick + " (" + inviteUserID + ") 님이 채팅 요청을 보냈습니다.\n수락하시겠습니까?",
                                             "채팅 요청",
                                             JOptionPane.YES_NO_OPTION,
                                             JOptionPane.QUESTION_MESSAGE);

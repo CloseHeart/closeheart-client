@@ -35,6 +35,8 @@ public class NewChatForm extends BaseForm {
         // 각종 Action Event을 설정
         setEvent();
 
+        this.getRootPane().setDefaultButton(btn_go);
+
         this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
     }
 

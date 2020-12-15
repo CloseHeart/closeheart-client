@@ -40,7 +40,8 @@ public class ChatForm extends BaseForm {
 
     private DefaultListModel<Chat> chatModel;
     private ChatRenderer chatRenderer;
-    private String roomUser = "";
+    private int curUser = 0;
+    private boolean isCreatedNow;
 
     private long lastSendTime;
 
@@ -62,6 +63,8 @@ public class ChatForm extends BaseForm {
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+        isCreatedNow = true;
 
         setVisible(true);
 
@@ -87,21 +90,38 @@ public class ChatForm extends BaseForm {
         });
 
         btn_send.addActionListener(e -> {
-            long tempTime = System.currentTimeMillis();
-            long intervalTime = tempTime - lastSendTime;
-            System.out.println(System.currentTimeMillis() + " / " + intervalTime);
-            if(intervalTime >= 800) {
-                lastSendTime = System.currentTimeMillis();
-                HashMap<String, Object> sendMsgMap = new HashMap<>();
-                sendMsgMap.put("token", myUser.getUserToken());
-                sendMsgMap.put("msg", tf_message.getText());
-                out.println(Util.createJSON(211, sendMsgMap));
-                tf_message.setText("");
-                tf_message.setCaretPosition(0);
+            if(curUser > 1) {
+                long tempTime = System.currentTimeMillis();
+                long intervalTime = tempTime - lastSendTime;
+                System.out.println(System.currentTimeMillis() + " / " + intervalTime);
+                if (intervalTime >= 800) {
+                    lastSendTime = System.currentTimeMillis();
+                    HashMap<String, Object> sendMsgMap = new HashMap<>();
+                    sendMsgMap.put("token", myUser.getUserToken());
+                    sendMsgMap.put("msg", tf_message.getText());
+                    out.println(Util.createJSON(211, sendMsgMap));
+                    tf_message.setText("");
+                    tf_message.setCaretPosition(0);
+                } else {
+                    chatModel.addElement(new Chat(2, null, "너무 빠릅니다. 잠시 후 전송하세요.", Calendar.getInstance()));
+                    chatRenderer.repaint();
+                    SwingUtilities.invokeLater(new Runnable() {
+                        @Override
+                        public void run() {
+                            sp_chatlist.getVerticalScrollBar().setValue(sp_chatlist.getVerticalScrollBar().getMaximum());
+                        }
+                    });
+                }
             }
             else {
-                chatModel.addElement(new Chat(2, null, "너무 빠릅니다. 잠시 후 전송하세요.", Calendar.getInstance()));
+                chatModel.addElement(new Chat(2, null, "채팅방에 아무도 없습니다.", Calendar.getInstance()));
                 chatRenderer.repaint();
+                SwingUtilities.invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        sp_chatlist.getVerticalScrollBar().setValue(sp_chatlist.getVerticalScrollBar().getMaximum());
+                    }
+                });
             }
         });
     }
@@ -242,11 +262,13 @@ public class ChatForm extends BaseForm {
         }
 
         private void updateUserList(String listStr) {
+            curUser = 0;
             StringBuilder userList = new StringBuilder("");
             JsonArray jsonArray = JsonParser.parseString(listStr).getAsJsonArray();
 
             Iterator<JsonElement> userArray = jsonArray.iterator();
             while(userArray.hasNext()) {
+                curUser++;
                 userList.append(userArray.next().getAsString());
                 if(userArray.hasNext()) {
                     userList.append(", ");
@@ -254,6 +276,22 @@ public class ChatForm extends BaseForm {
             }
 
             lb_chatname.setText(userList.toString());
+
+            if(!isCreatedNow && curUser == 1) {
+                try {
+                    out.println(Util.createSingleKeyValueJSON(212, "token", myUser.getUserToken()));
+                    out.close();
+                    in.close();
+                    socket.close();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                ChatForm.this.dispose();
+            }
+
+            if(isCreatedNow) {
+                isCreatedNow = false;
+            }
         }
     }
 }
