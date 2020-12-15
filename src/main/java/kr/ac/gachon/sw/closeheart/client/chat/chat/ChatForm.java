@@ -147,7 +147,14 @@ public class ChatForm extends BaseForm {
             public void keyPressed(KeyEvent e) {
                 super.keyPressed(e);
                 if(e.getKeyCode() == KeyEvent.VK_ENTER) {
-                    tf_message.setCaretPosition(0);
+                    SwingUtilities.invokeLater(new Runnable() {
+                        @Override
+                        public void run() {
+                            tf_message.setCaretPosition(0);
+                            tf_message.setText("");
+                        }
+                    });
+
                     btn_send.doClick();
                 }
             }
