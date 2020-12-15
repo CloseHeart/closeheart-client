@@ -41,6 +41,7 @@ public class SettingForm extends BaseForm {
     private User user;
     private PrintWriter out;
     private RemoveForm removeForm;
+    private DeveloperForm developerForm;
     private boolean isPasswordCorrect = false;
 
     public SettingForm(Socket socket, User user) {
@@ -144,7 +145,7 @@ public class SettingForm extends BaseForm {
         });
 
         btn_developer.addActionListener(e -> {
-            DeveloperForm developerForm = new DeveloperForm();
+            if(developerForm == null) developerForm = new DeveloperForm();
             developerForm.setVisible(true);
         });
 
