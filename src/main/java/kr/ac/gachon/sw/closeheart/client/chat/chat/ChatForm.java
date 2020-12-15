@@ -91,26 +91,28 @@ public class ChatForm extends BaseForm {
 
         btn_send.addActionListener(e -> {
             if(curUser > 1) {
-                long tempTime = System.currentTimeMillis();
-                long intervalTime = tempTime - lastSendTime;
-                System.out.println(System.currentTimeMillis() + " / " + intervalTime);
-                if (intervalTime >= 800) {
-                    lastSendTime = System.currentTimeMillis();
-                    HashMap<String, Object> sendMsgMap = new HashMap<>();
-                    sendMsgMap.put("token", myUser.getUserToken());
-                    sendMsgMap.put("msg", tf_message.getText());
-                    out.println(Util.createJSON(211, sendMsgMap));
-                    tf_message.setText("");
-                    tf_message.setCaretPosition(0);
-                } else {
-                    chatModel.addElement(new Chat(2, null, "너무 빠릅니다. 잠시 후 전송하세요.", Calendar.getInstance()));
-                    chatRenderer.repaint();
-                    SwingUtilities.invokeLater(new Runnable() {
-                        @Override
-                        public void run() {
-                            sp_chatlist.getVerticalScrollBar().setValue(sp_chatlist.getVerticalScrollBar().getMaximum());
-                        }
-                    });
+                if(!tf_message.getText().trim().isEmpty()) {
+                    long tempTime = System.currentTimeMillis();
+                    long intervalTime = tempTime - lastSendTime;
+                    System.out.println(System.currentTimeMillis() + " / " + intervalTime);
+                    if (intervalTime >= 800) {
+                        lastSendTime = System.currentTimeMillis();
+                        HashMap<String, Object> sendMsgMap = new HashMap<>();
+                        sendMsgMap.put("token", myUser.getUserToken());
+                        sendMsgMap.put("msg", tf_message.getText());
+                        out.println(Util.createJSON(211, sendMsgMap));
+                        tf_message.setText("");
+                        tf_message.setCaretPosition(0);
+                    } else {
+                        chatModel.addElement(new Chat(2, null, "너무 빠릅니다. 잠시 후 전송하세요.", Calendar.getInstance()));
+                        chatRenderer.repaint();
+                        SwingUtilities.invokeLater(new Runnable() {
+                            @Override
+                            public void run() {
+                                sp_chatlist.getVerticalScrollBar().setValue(sp_chatlist.getVerticalScrollBar().getMaximum());
+                            }
+                        });
+                    }
                 }
             }
             else {
@@ -255,6 +257,9 @@ public class ChatForm extends BaseForm {
                         }
                     });
                 }
+            }
+            catch (IllegalStateException e) {
+
             }
             catch (Exception e) {
                 e.printStackTrace();
