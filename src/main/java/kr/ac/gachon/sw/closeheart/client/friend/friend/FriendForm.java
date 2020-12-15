@@ -55,6 +55,7 @@ public class FriendForm extends BaseForm {
     private FriendListRenderer offlineFriendListRenderer;
 
     private HashMap<String, FriendInfoForm> friendInfoForms;
+    private HashMap<String, ChatForm> chatFormHashMap;
 
     public FriendForm(Socket socket, String authToken) {
         this.socket = socket;
@@ -344,6 +345,7 @@ public class FriendForm extends BaseForm {
                         else tf_statusmsg.setText("상태메시지가 없습니다.");
 
                         userSearchForm = new UserSearchForm(serverOutput, myUserInfo);
+                        chatFormHashMap = new HashMap<>();
                     }
                     else if(responseCode == 403) {
                         JOptionPane.showMessageDialog(
@@ -434,6 +436,12 @@ public class FriendForm extends BaseForm {
     }
 
     private void requestChat(String userID) {
+        for(String chatId : chatFormHashMap.keySet()) {
+            if(!chatFormHashMap.get(chatId).isVisible()) {
+                chatFormHashMap.remove(chatId);
+            }
+        }
+
         HashMap<String, Object> chatRequestMap = new HashMap<>();
         chatRequestMap.put("token", myUserInfo.getUserToken());
         chatRequestMap.put("inviteID", userID);
@@ -522,8 +530,6 @@ public class FriendForm extends BaseForm {
                                     String newCnt = jsonObject.get("newCnt").getAsString();
                                     String currDecideCnd = jsonObject.get("currDecideCnd").getAsString();
                                     lb_covid19.setText("[코로나19] 오늘 추가 확진자 수 : " + newCnt + " / 총 확진자 수 : " + currDecideCnd);
-                                } else if (code == 500) {
-                                    lb_covid19.setText("Welcome to CloseHeart!");
                                 }
                                 break;
                             // 새로고침 처리
@@ -648,13 +654,6 @@ public class FriendForm extends BaseForm {
                                             "알림",
                                             JOptionPane.INFORMATION_MESSAGE);
                                 }
-                                else if(code == 500) {
-                                    JOptionPane.showMessageDialog(
-                                            settingForm,
-                                            "친구 삭제가 실패했습니다.",
-                                            "에러",
-                                            JOptionPane.ERROR_MESSAGE);
-                                }
                                 break;
                             case "sendchatinvite":
                                 if(code == 200) {
@@ -673,22 +672,29 @@ public class FriendForm extends BaseForm {
                                 }
                                 break;
                             case "chatinviteresult":
-                                if (code == 200) {
-                                    int chatServerPort = jsonObject.get("serverPort").getAsInt();
-                                    String roomNumber = jsonObject.get("roomNumber").getAsString();
-                                    new ChatForm(socket.getInetAddress().getHostAddress(), chatServerPort, myUserInfo, roomNumber);
+                                if(code == 200) {
+                                    // 수락 받으면 아무것도 안함 - 이미 채팅 열려있음
                                 }
                                 else if(code == 403) {
+                                    String roomNumber = jsonObject.get("roomNumber").getAsString();
                                     String targetUserNick = jsonObject.get("targetUserNick").getAsString();
+                                    if(chatFormHashMap.containsKey(roomNumber)) {
+                                        chatFormHashMap.get(roomNumber).dispose();
+                                        chatFormHashMap.remove(roomNumber);
+                                    }
                                     JOptionPane.showMessageDialog(
-                                            FriendForm.this,
+                                            null,
                                             targetUserNick + "님이 채팅을 거절하셨습니다.",
                                             "알림",
                                             JOptionPane.INFORMATION_MESSAGE);
                                 }
                                 else {
+                                    if(chatFormHashMap.containsKey(jsonObject.get("roomNumber").getAsString())) {
+                                        chatFormHashMap.get(jsonObject.get("roomNumber").getAsString()).dispose();
+                                        chatFormHashMap.remove(jsonObject.get("roomNumber").getAsString());
+                                    }
                                     JOptionPane.showMessageDialog(
-                                            FriendForm.this,
+                                            null,
                                             "채팅 초대에 실패했습니다.",
                                             "에러",
                                             JOptionPane.ERROR_MESSAGE);
@@ -698,10 +704,12 @@ public class FriendForm extends BaseForm {
                                 if (code == 200) {
                                     String inviteUserID = jsonObject.get("inviteUserID").getAsString();
                                     String inviteUserNick = jsonObject.get("inviteUserNick").getAsString();
+                                    String rNumber = jsonObject.get("roomNumber").getAsString();
 
                                     HashMap<String, Object> chatInviteAnswerMap = new HashMap<>();
                                     chatInviteAnswerMap.put("token", myUserInfo.getUserToken());
                                     chatInviteAnswerMap.put("inviteUserID", inviteUserID);
+                                    chatInviteAnswerMap.put("roomNumber", rNumber);
 
                                     int receiveOption = JOptionPane.showConfirmDialog(getContentPane(),
                                             inviteUserNick + " ( " + inviteUserID + ") 님이 채팅 요청을 보냈습니다.\n수락하시겠습니까?",
@@ -719,10 +727,25 @@ public class FriendForm extends BaseForm {
                                 }
                                 break;
                             case "enterchat":
+                                for(String chatId : chatFormHashMap.keySet()) {
+                                    if(!chatFormHashMap.get(chatId).isVisible()) {
+                                        chatFormHashMap.remove(chatId);
+                                    }
+                                }
                                 if (code == 200) {
                                     int chatServerPort = jsonObject.get("serverPort").getAsInt();
-                                    String roomNumber = jsonObject.get("roomNumber").getAsString();
-                                    new ChatForm(socket.getInetAddress().getHostAddress(), chatServerPort, myUserInfo, roomNumber);
+                                    String enterRoomNumber = jsonObject.get("roomNumber").getAsString();
+                                    if (!chatFormHashMap.containsKey(enterRoomNumber)) {
+                                        chatFormHashMap.put(enterRoomNumber, new ChatForm(socket.getInetAddress().getHostAddress(), chatServerPort, myUserInfo, enterRoomNumber));
+                                        chatFormHashMap.get(enterRoomNumber).setVisible(true);
+                                    }
+                                    else {
+                                        JOptionPane.showMessageDialog(
+                                                null,
+                                                "같은 채팅방에는 1개만 접속할 수 있습니다!",
+                                                "에러",
+                                                JOptionPane.ERROR_MESSAGE);
+                                    }
                                 }
                                 else {
                                     JOptionPane.showMessageDialog(
@@ -830,6 +853,7 @@ public class FriendForm extends BaseForm {
             }
 
             // 종료하고 로그인 폼으로 넘어감
+            Arrays.asList(Window.getWindows()).forEach(Window::dispose);
             if(FriendForm.this.isVisible()) FriendForm.this.dispose();
             ConnectionInfo info = Util.getServerInfo();
             new LoginForm(info);

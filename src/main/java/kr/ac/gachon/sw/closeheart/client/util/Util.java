@@ -158,7 +158,7 @@ public class Util {
 
         try {
             // 파일에서 접속 정보 가져오기
-            File serverDataFile = new File("closeheart_server.dat");
+            File serverDataFile = new File("closeheart_servers.dat");
             FileReader fileReader = new FileReader(serverDataFile);
             BufferedReader bufferedReader = new BufferedReader(fileReader);
 
