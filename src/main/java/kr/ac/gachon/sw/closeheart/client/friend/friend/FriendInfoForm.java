@@ -1,4 +1,4 @@
-package kr.ac.gachon.sw.closeheart.client.friend.setting;
+package kr.ac.gachon.sw.closeheart.client.friend.friend;
 
 import kr.ac.gachon.sw.closeheart.client.base.BaseForm;
 import kr.ac.gachon.sw.closeheart.client.object.User;
@@ -32,7 +32,7 @@ public class FriendInfoForm extends BaseForm {
     private User myUser;
     private User friendUser;
 
-    public FriendInfoForm(User myUser, User friendUser, boolean isFriend, PrintWriter printWriter) {
+    public FriendInfoForm(User myUser, User friendUser, PrintWriter printWriter) {
         this.myUser = myUser;
         this.friendUser = friendUser;
         this.isFriend = isFriend;
@@ -59,6 +59,14 @@ public class FriendInfoForm extends BaseForm {
         });
 
         btn_friendadd.addActionListener(e -> {
+            boolean isFriend = false;
+            for(User friend :  myUser.getFriends()) {
+                if(friend.getUserID().equals(lb_id.getText())) {
+                    isFriend = true;
+                    break;
+                }
+            }
+
             if(!isFriend) {
                 // 친구 요청 JSON 생성
                 HashMap<String, Object> requestFriendMap = new HashMap<>();
@@ -68,6 +76,9 @@ public class FriendInfoForm extends BaseForm {
 
                 // 요청 전송
                 printWriter.println(requestFriendJSON);
+            }
+            else {
+                JOptionPane.showMessageDialog(this, "이미 친구인 유저입니다.", "경고", JOptionPane.WARNING_MESSAGE);
             }
         });
     }

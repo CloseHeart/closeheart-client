@@ -1,5 +1,7 @@
 package kr.ac.gachon.sw.closeheart.client.chat.chat;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import kr.ac.gachon.sw.closeheart.client.base.BaseForm;
@@ -16,6 +18,7 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Scanner;
 
 public class ChatForm extends BaseForm {
@@ -26,6 +29,7 @@ public class ChatForm extends BaseForm {
     private JTextArea tf_message;
     private JLabel lb_chatname;
     private JScrollPane sp_chatlist;
+    private JLabel lb_code;
 
     private Socket socket;
     private Scanner in;
@@ -36,6 +40,7 @@ public class ChatForm extends BaseForm {
 
     private DefaultListModel<Chat> chatModel;
     private ChatRenderer chatRenderer;
+    private String roomUser = "";
 
     private long lastSendTime;
 
@@ -102,7 +107,7 @@ public class ChatForm extends BaseForm {
     }
 
     private void initialSetting() {
-        lb_chatname.setText(roomNumber);
+        lb_code.setText("채팅방 코드 : " + roomNumber);
         lastSendTime = 0;
         try {
             in = new Scanner(new InputStreamReader(socket.getInputStream()));
@@ -196,6 +201,7 @@ public class ChatForm extends BaseForm {
                         case "join":
                             System.out.println(user + " join");
                             chatModel.addElement(new Chat(2, user, user + "님이 입장하셨습니다.", Calendar.getInstance()));
+                            updateUserList(serverInput.get("userlist").getAsString());
                             break;
                         // 메시지 처리
                         case "message":
@@ -207,6 +213,7 @@ public class ChatForm extends BaseForm {
                         case "exit":
                             System.out.println(user + " exit");
                             chatModel.addElement(new Chat(2, user, user + "님이 퇴장하셨습니다.", Calendar.getInstance()));
+                            updateUserList(serverInput.get("userlist").getAsString());
                             break;
                     }
 
@@ -225,6 +232,21 @@ public class ChatForm extends BaseForm {
             catch (Exception e) {
                 e.printStackTrace();
             }
+        }
+
+        private void updateUserList(String listStr) {
+            StringBuilder userList = new StringBuilder("");
+            JsonArray jsonArray = JsonParser.parseString(listStr).getAsJsonArray();
+
+            Iterator<JsonElement> userArray = jsonArray.iterator();
+            while(userArray.hasNext()) {
+                userList.append(userArray.next().getAsString());
+                if(userArray.hasNext()) {
+                    userList.append(", ");
+                }
+            }
+
+            lb_chatname.setText(userList.toString());
         }
     }
 }

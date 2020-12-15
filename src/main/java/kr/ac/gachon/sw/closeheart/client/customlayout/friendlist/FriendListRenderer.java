@@ -34,7 +34,7 @@ public class FriendListRenderer extends JPanel implements ListCellRenderer<User>
         this.setBackground(new Color(255, 255, 255));
 
         // 닉네임 표시 Label
-        userNick.setText(value.getUserNick());
+        userNick.setText(value.getUserNick() + " (" + value.getUserID() + ")");
         userNick.setFont(new Font(Util.getStrFromProperties(getClass(), "default_font"), Font.BOLD, 20));
 
         // 상태 메시지 표시 Label

@@ -35,7 +35,6 @@ public class User {
         this.userBirthday = userBirthday;
         this.userLastTime = userLastTime;
         this.isOnline = isOnline;
-        this.userEmail = userEmail;
     }
 
     public String getUserToken() {
