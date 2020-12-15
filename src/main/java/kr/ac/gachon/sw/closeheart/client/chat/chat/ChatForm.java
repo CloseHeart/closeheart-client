@@ -41,6 +41,7 @@ public class ChatForm extends BaseForm {
     private DefaultListModel<Chat> chatModel;
     private ChatRenderer chatRenderer;
     private int curUser = 0;
+    private boolean isCreatedNow;
 
     private long lastSendTime;
 
@@ -62,6 +63,8 @@ public class ChatForm extends BaseForm {
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+        isCreatedNow = true;
 
         setVisible(true);
 
@@ -273,6 +276,22 @@ public class ChatForm extends BaseForm {
             }
 
             lb_chatname.setText(userList.toString());
+
+            if(!isCreatedNow && curUser == 1) {
+                try {
+                    out.println(Util.createSingleKeyValueJSON(212, "token", myUser.getUserToken()));
+                    out.close();
+                    in.close();
+                    socket.close();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                ChatForm.this.dispose();
+            }
+
+            if(isCreatedNow) {
+                isCreatedNow = false;
+            }
         }
     }
 }
