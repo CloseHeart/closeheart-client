@@ -89,8 +89,14 @@ public class FriendForm extends BaseForm {
     public void setEvent() {
         // 설정 버튼 액션
         btn_setting.addActionListener(e -> {
-            settingForm = new SettingForm(socket, myUserInfo);
-            settingForm.setVisible(true);
+            if(settingForm == null) {
+                settingForm = new SettingForm(socket, myUserInfo);
+            }
+
+            if(!settingForm.isVisible()) {
+                settingForm = new SettingForm(socket, myUserInfo);
+                settingForm.setVisible(true);
+            }
         });
 
         // 새로고침 버튼 액션
