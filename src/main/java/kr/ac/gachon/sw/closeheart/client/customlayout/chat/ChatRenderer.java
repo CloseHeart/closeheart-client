@@ -26,7 +26,7 @@ public class ChatRenderer extends JPanel implements ListCellRenderer<Chat> {
 
     @Override
     public Component getListCellRendererComponent(JList list, Chat value, int index, boolean isSelected, boolean cellHasFocus) {
-        chatMessage.setRows(value.getChatMsg().length() / 10);
+        chatMessage.setRows(value.getChatMsg().length() / 20);
         chatMessage.setColumns(20);
 
         chatMessage.setEditable(false);
