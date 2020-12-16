@@ -3,6 +3,9 @@ Chat Program '마음을 가까이 (CloseHeart)' Client
 
 Logo Image by Flaticon.com (https://www.flaticon.com/free-icon/love_3010989?term=charity&page=1&position=19)
 
+# 꼭 읽어주세요
+테스트를 해보시려면 https://github.com/CloseHeart/closeheart-testclient <-- 이 주소를 꼭 확인해주세요.
+
 ## Presentation Youtube URL
 https://www.youtube.com/watch?v=9RhL-xF7mcM
 
