@@ -9,6 +9,7 @@ import javax.swing.*;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -58,7 +59,7 @@ public class SettingForm extends BaseForm {
         setEvent();
 
         try {
-            out = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()), true);
+            out = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8), true);
         } catch (Exception e) {
             e.printStackTrace();
         }

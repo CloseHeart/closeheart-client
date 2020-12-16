@@ -20,6 +20,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -281,8 +282,8 @@ public class FriendForm extends BaseForm {
         if(socket.isConnected() && !authToken.isEmpty()) {
             try {
                 // Input / Output 생성
-                serverInput = new Scanner(new InputStreamReader(socket.getInputStream()));
-                serverOutput = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()), true);
+                serverInput = new Scanner(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
+                serverOutput = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8), true);
 
                 // 내 정보 요청
                 String requestMyInfo = Util.createSingleKeyValueJSON(300, "token", authToken);

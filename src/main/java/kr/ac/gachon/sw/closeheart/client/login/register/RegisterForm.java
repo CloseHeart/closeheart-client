@@ -14,6 +14,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.time.format.DateTimeFormatter;
@@ -62,8 +63,8 @@ public class RegisterForm extends BaseForm {
         this.socket = socket;
 
         try {
-            serverInput = new Scanner(new InputStreamReader(socket.getInputStream()));
-            serverOutput = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()), true);
+            serverInput = new Scanner(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
+            serverOutput = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8), true);
         }
         catch (Exception e) {
             JOptionPane.showMessageDialog(

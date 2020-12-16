@@ -16,6 +16,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -132,8 +133,8 @@ public class ChatForm extends BaseForm {
         lb_code.setText("채팅방 코드 : " + roomNumber);
         lastSendTime = 0;
         try {
-            in = new Scanner(new InputStreamReader(socket.getInputStream()));
-            out = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()), true);
+            in = new Scanner(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
+            out = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8), true);
 
             HashMap<String, Object> connectMap = new HashMap<>();
             connectMap.put("token", myUser.getUserToken());
