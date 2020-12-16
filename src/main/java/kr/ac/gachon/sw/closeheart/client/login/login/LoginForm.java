@@ -14,6 +14,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Scanner;
 
@@ -138,8 +139,8 @@ public class LoginForm extends BaseForm {
             }
 
             // Input / Output Stream 받기
-            serverInput = new Scanner(new InputStreamReader(loginServerSocket.getInputStream()));
-            serverOutput = new PrintWriter(new OutputStreamWriter(loginServerSocket.getOutputStream()), true);
+            serverInput = new Scanner(new InputStreamReader(loginServerSocket.getInputStream(), StandardCharsets.UTF_8));
+            serverOutput = new PrintWriter(new OutputStreamWriter(loginServerSocket.getOutputStream(), StandardCharsets.UTF_8), true);
 
             // 엔터키 누르면 로그인 하도록 설정
             this.getRootPane().setDefaultButton(btn_login);
